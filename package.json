@@ -1,0 +1,62 @@
+{
+  "name": "constrainodelaunato",
+  "version": "1.0.0",
+  "description": "Constrained Delaunay triangulator build off of the delaunator package.",
+  "main": "constrainMe.js",
+  "module": "main.js",
+  "jsdelivr": "constrainodelaunato.min.js",
+  "unpkg": "constrainodelaunato.min.js",
+  "sideEffects": false,
+  "dependencies": {
+    "delaunator": "^4.0.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "browser-sync": "^2.26.7",
+    "eslint": "^6.8.0",
+    "esm": "^3.2.25",
+    "rollup": "^1.29.0",
+    "rollup-plugin-buble": "^0.19.8",
+    "rollup-plugin-terser": "^5.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/willmac321/constrainodelaunato.git"
+  },
+  "scripts": {
+    "lint": "eslint index.js test/test.js bench.js rollup.config.js docs/diagrams.js",
+    "pretest": "npm run lint",
+    "test": "node -r esm test/test.js",
+    "cov": "c8 node -r esm test/test.js && c8 report -r html",
+    "bench": "node -r esm bench.js",
+    "build": "rollup -c",
+    "start": "rollup -cw",
+    "prepublishOnly": "npm test && npm run build",
+    "dev": "browser-sync start --server --files \"./*.js\" --index \"main.html\""
+  },
+  "files": [
+    "constrainMe.js",
+    "constrainodelaunato.js",
+    "constrainodelaunato.min.js"
+  ],
+  "eslintConfig": {
+    "extends": "mourner",
+    "rules": {
+      "no-sequences": 0
+    }
+  },
+  "keywords": [
+    "delaunay triangulation",
+    "computational geometry",
+    "algorithms",
+    "Ruppert's Algorithm",
+    "constrained delaunay triangulation",
+    "concave hull"
+  ],
+  "author": "Will MacIntyre",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/willmac321/constrainodelaunato/issues"
+  },
+  "homepage": "https://gitlab.com/willmac321/constrainodelaunato#readme"
+}
