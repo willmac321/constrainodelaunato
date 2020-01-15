@@ -8,6 +8,7 @@
   "unpkg": "constrainodelaunato.min.js",
   "sideEffects": false,
   "dependencies": {
+    "concaveman": "^1.1.1",
     "delaunator": "^4.0.1"
   },
   "devDependencies": {
@@ -32,7 +33,7 @@
     "build": "rollup -c",
     "start": "rollup -cw",
     "prepublishOnly": "npm test && npm run build",
-    "dev": "browser-sync start --server --files \"./*.js\" --index \"main.html\""
+    "dev": "browser-sync start --server --files './*.js' './main.html' --index \"main.html\""
   },
   "files": [
     "constrainMe.js",
