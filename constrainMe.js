@@ -1,5 +1,7 @@
 import Delaunator from 'delaunator';
 
+const test = [10,6,3,4,7,1,2,5];
+
 export default class ConstrainoDelaunato{
 	constructor(coords, boundary, k) {
 		//k is the k-nearest neighbor selection
@@ -13,7 +15,8 @@ export default class ConstrainoDelaunato{
 			boundary = boundary.flat();
 		}
 		if(boundary) {
-			boundary = this.sortHeap(boundary);
+	//		boundary = this.sortHeap(boundary);
+			this.sortHeap(test, 1)
 			this.boundary = this.makaThaEnvelope(boundary);
 			coords = coords.concat(boundary);
 		}
@@ -45,28 +48,42 @@ export default class ConstrainoDelaunato{
 
 	}
 
-	sortHeap(arr) {
+	sortHeap(arr, dim) {
 		let newArr = [];
 		let index = 0;
 		let minY = Infinity;
 		let minX = Infinity;
 		//convert point arr to 2d -> easier for me to get my head around sorting
-		while(arr.length) newArr.push(arr.splice(0, 2));
-		//find min point in y then x - Graham _ scan
-		for (let p = 0; p < newArr.length; p++) {
-			if (newArr[p][1] < minY) {
-				minX = newArr[p][0];
-				minY = newArr[p][1];
-				index = p;
-			}
-			else if (newArr[p][1] <= minY && newArr[p][0] <= minX) {
-				minX = newArr[p][0];
-				minY = newArr[p][1];
-				index = p;
-			}
+		if (dim > 1) {
+			while(arr.length) newArr.push(arr.splice(0, dim));
 		}
-		builtInSort([minX, minY], newArr);
-	//	heapSort([minX, minY], newArr, newArr.length);
+		else{
+			newArr = arr.slice();
+		}
+
+		for (let p = 0; p < newArr.length; p++) {
+			//TODO remove
+			if (newArr[p] < minY) {
+				minY = newArr[p];
+				index = p;
+			}
+
+//			if (newArr[p][1] < minY) {
+//				minX = newArr[p][0];
+//				minY = newArr[p][1];
+//				index = p;
+//			}
+//			else if (newArr[p][1] <= minY && newArr[p][0] <= minX) {
+//				minX = newArr[p][0];
+//				minY = newArr[p][1];
+//				index = p;
+//			}
+		}
+		console.log(minY, newArr.slice());
+//		builtInSort([minX, minY], newArr);
+		//		TODO change back
+//		heapSort([minX, minY], newArr, newArr.length);
+		heapSort(minX, newArr, newArr.length);
 
 		return newArr.flat();
 	}
@@ -120,7 +137,7 @@ function manhattenDist(a, b) {
 function builtInSort(point, arr) {
 	return arr.sort((a, b) => {
 //		return manhattenDist(point, a) - manhattenDist(point, b)
-		return (dotProduct(point, a) + dotProduct(point, b) /  (manhattenDist(point, a) * manhattenDist(point, b));
+		return (dotProduct(point, a) - dotProduct(point, b));
 	});
 }
 
@@ -130,6 +147,9 @@ function heapSort(point, a, count, p) {
 	let prom = new Promise((res, rej) => {
 		if (p === 'dist'){
 			func = manhattenDist;
+		} else if (!Array.isArray(a[0])) {
+			console.log('here');
+			func = (a, b) => a - b;
 		} else {
 			func = dotProduct;
 		}

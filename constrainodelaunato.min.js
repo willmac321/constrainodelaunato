@@ -499,6 +499,8 @@
         return p[1];
     }
 
+    const test = [10,6,3,4,7,1,2,5];
+
     class ConstrainoDelaunato{
     	constructor(coords, boundary, k) {
     		//k is the k-nearest neighbor selection
@@ -512,7 +514,8 @@
     			boundary = boundary.flat();
     		}
     		if(boundary) {
-    			boundary = this.sortHeap(boundary);
+    	//		boundary = this.sortHeap(boundary);
+    			this.sortHeap(test, 1);
     			this.boundary = this.makaThaEnvelope(boundary);
     			coords = coords.concat(boundary);
     		}
@@ -542,25 +545,40 @@
 
     	}
 
-    	sortHeap(arr) {
+    	sortHeap(arr, dim) {
     		let newArr = [];
     		let minY = Infinity;
     		let minX = Infinity;
     		//convert point arr to 2d -> easier for me to get my head around sorting
-    		while(arr.length) newArr.push(arr.splice(0, 2));
-    		//find min point in y then x - Graham _ scan
-    		for (let p = 0; p < newArr.length; p++) {
-    			if (newArr[p][1] < minY) {
-    				minX = newArr[p][0];
-    				minY = newArr[p][1];
-    			}
-    			else if (newArr[p][1] <= minY && newArr[p][0] <= minX) {
-    				minX = newArr[p][0];
-    				minY = newArr[p][1];
-    			}
+    		if (dim > 1) {
+    			while(arr.length) newArr.push(arr.splice(0, dim));
     		}
-    		builtInSort([minX, minY], newArr);
-    	//	heapSort([minX, minY], newArr, newArr.length);
+    		else{
+    			newArr = arr.slice();
+    		}
+
+    		for (let p = 0; p < newArr.length; p++) {
+    			//TODO remove
+    			if (newArr[p] < minY) {
+    				minY = newArr[p];
+    			}
+
+    //			if (newArr[p][1] < minY) {
+    //				minX = newArr[p][0];
+    //				minY = newArr[p][1];
+    //				index = p;
+    //			}
+    //			else if (newArr[p][1] <= minY && newArr[p][0] <= minX) {
+    //				minX = newArr[p][0];
+    //				minY = newArr[p][1];
+    //				index = p;
+    //			}
+    		}
+    		console.log(minY, newArr.slice());
+    //		builtInSort([minX, minY], newArr);
+    		//		TODO change back
+    //		heapSort([minX, minY], newArr, newArr.length);
+    		heapSort(minX, newArr, newArr.length);
 
     		return newArr.flat();
     	}
@@ -601,11 +619,88 @@
     	return p.x*o.x + p.y*o.y;
     }
 
-    function builtInSort(point, arr) {
-    	return arr.sort((a, b) => {
-    //		return manhattenDist(point, a) - manhattenDist(point, b)
-    		return dotProduct(point, a) - dotProduct(point, b)
+    function manhattenDist(a, b) {
+    	let p = {x: a[0], y: a[1]};
+    	let o = {x: b[0], y: b[1]};
+    	return Math.abs(p.x - o.x) + Math.abs(p.y - o.y);
+    }
+
+    //heap sort 2d array by angle
+    function heapSort(point, a, count, p) {
+    	let func;
+    	let prom = new Promise((res, rej) => {
+    		if (p === 'dist'){
+    			func = manhattenDist;
+    		} else if (!Array.isArray(a[0])) {
+    			console.log('here');
+    			func = (a, b) => a - b;
+    		} else {
+    			func = dotProduct;
+    		}
+    		return res();
     	});
+    	
+    	prom.then((res)=> {
+    		heapify(point, a, count, func);
+    		return console.log(point, a, count);
+    	}).then((r)=> {
+    		let end = count - 1;
+    		while (end > 0) {
+    			swap$1(a, end, 0);
+    			end--;
+    			siftDown(point, a, 0, end, func);
+    		}
+    	}).then(() => {
+    		for (let r of a) {
+    			console.log(r, func(r, point));
+    		}
+    	}).catch((e) => console.log('uhoh'));
+    }
+
+    function heapify(point, a, count, func) {
+    	let par = (i) => Math.floor((i - 1) / 2);
+    	let start = par(count - 1);
+    	while (start >= 0) {
+    		siftDown(point, a, start, count - 1, func);
+    		start--;
+    	}
+    }
+
+    function siftDown(point, a, start, end, func) {
+    	let root = start;
+    	let left = (i) => 2 * i + 1;
+
+    	while (left(root) <= end) {
+    		let child = left(root);
+    		let s = root;
+    		let dot = (i) => { 
+    //			return dotProduct(a[i], point);
+    			let t = func(a[i], point);
+    //			console.log(a[i], point, t);
+    			return t;
+    		};
+    		let dotOld = dot(s); 
+
+    		if (dotOld < dot(child)) {
+    			s = child;
+    		}
+    		if (child + 1 <= end && dotOld < dot(child + 1)) {
+    			s = child + 1;
+    		}
+    		if (s === root) {
+    			return;
+    		} else {
+    //			console.log(`swap ${a[root]} ${a[s]}`);
+    			swap$1(a, root, s);
+    			root = s;
+    		}
+    	}
+    }
+
+    function swap$1(a, i, j) {
+    	let t = a[i];
+    	a[i] = a[j];
+    	a[j] = t;
     }
 
     return ConstrainoDelaunato;
