@@ -158,12 +158,24 @@ function draw() {
     ctx.fillStyle = 'black';
     ctx.beginPath();
     for (var i = 0; i < updateArr.length; i++) {
-        ctx.rect(getX(i) - 1.5, getY(i) - 1.5, 3, 3);
+    	ctx.rect(getX(i) - 1.5, getY(i) - 1.5, 3, 3);
     }
     ctx.fill();
 
+	const b = delaunay.boundary;
+    ctx.fillStyle = 'red';
     ctx.beginPath();
+    ctx.rect(padding + ratio * (b.ray.x0 - minX) - 3, padding + ratio * (b.ray.y0 - minY) - 3, 6, 6);
+	ctx.moveTo(padding + ratio * (b.ray.x0 - minX), padding + ratio * (b.ray.y0 - minY));
+	ctx.lineTo(padding + ratio * (b.ray.x1 - minX), padding + ratio * (b.ray.y1 - minY));
+    ctx.fill();
+	ctx.strokeStyle = 'red';
+	ctx.stroke();
+
+
 	const bound = delaunay.bound;
+
+    ctx.beginPath();
     for (var i = 0; i < bound.length; i++) {
 		let oldpoint = {
 			x: padding + ratio * (bound[i - 2] - minX), 
