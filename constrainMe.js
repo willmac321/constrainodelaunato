@@ -6,9 +6,8 @@ const test = [10,6,3,4,7,1,2,5];
 class Boundary{
 	constructor(arr) {
 		this.coords = arr.slice();
-		this.indices = [];
 		this.center = this.calcCenter();
-		this.coords = sortHeap(this.coords, 2, 'polar', [this.center.x, this.center.y]);
+		this.coords = this.sortHeapAndClean(this.coords, 2, 'polar', [this.center.x, this.center.y]);
 		this.minY = minimumPointY(this.coords2D);
 		this.minX = minimumPointX(this.coords2D);
 		this.ray;
@@ -20,7 +19,60 @@ class Boundary{
 		console.log(this.pointInOrOut([180, 100]));
 	}
 
-	//concave center point
+	sortHeapAndClean(arr, dim, criteria, centerPoint) { 
+		this.coords = sortHeap(arr, dim, criteria, centerPoint);
+		this.clean();
+		return this.coords;
+	}
+
+	clean() {
+		// TODO there has to be a better way to do this
+		let c2D = this.coords2D.slice();
+
+		let count = 0;
+		let newc2D = [];
+		for (let item of c2D) {
+			for (let i = 0; i< c2D.length; i++) {
+				if (c2D[i][0] === item[0] && c2D[i][1] === item[1] && count !== i) {
+					let pass = true;
+					for( let t of newc2D) {
+						if (c2D[i][0] === t[0] && c2D[i][1] === t[1]) {
+							pass = false;
+							t[2]++;
+						}
+					}
+					if (pass) {	newc2D.push(item.concat(0)); }
+					break;
+				}
+			}
+			count ++;
+		}
+		let newnewc2D = [];
+		for (let i = 0; i < c2D.length; i++) {
+			let pass = true
+			for (let item of newc2D) {
+				if (c2D[i][0] !== item[0] && c2D[i][1] !== item[1]) {
+				} else if (c2D[i][0] === item[0] && c2D[i][1] === item[1] && item[2] < 1) {
+				} else if (c2D[i][0] === item[0] && c2D[i][1] === item[1] && item[2] > 0) {
+					item[2]--;
+					pass = false;
+				}
+			}
+			if (pass) {	newnewc2D.push(c2D[i]); }
+		}
+		this.coords = newnewc2D.flat();
+	}
+
+	concave(k) {
+//k nearest neighbor babbbbyyyy
+//https://towardsdatascience.com/the-concave-hull-c649795c0f0f
+//https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
+		let kk = Math.max(k, 3);
+		//double check arr is sorted and clean
+		this.coords = this.sortHeapAndClean(this.coords, 2, 'polar', [this.center.x, this.center.y]);
+		
+	}
+
 	calcCenter() {
 		let p = {x: 0, y: 0};
 
@@ -34,7 +86,6 @@ class Boundary{
 	}
 
 	pointInOrOut(point) {
-
 		//assume ray going to + infinity on x plane
 		let p = {x0: point[0], y0: point[1], x1: this.minX.x - 1000, y1: point[1]};
 		this.ray = p;
@@ -102,13 +153,6 @@ class Boundary{
 		}
 	}
 
-
-	makaThaEnvelope(arr, k) {
-//k nearest neighbor babbbbyyyy
-//https://towardsdatascience.com/the-concave-hull-c649795c0f0f
-
-	}
-
 	get coords2D() {
 		let newArr = [];
 		let arr = this.coords.slice();
@@ -130,7 +174,7 @@ export default class ConstrainoDelaunato{
 			boundary = boundary.flat();
 		}
 		if(boundary) {
-			this.boundary = new Boundary(boundary);
+			this.boundary = new Boundary(boundary, k);
 //			sortHeap(test, 1)
 			coords = coords.concat(this.boundary.coords);
 		}
