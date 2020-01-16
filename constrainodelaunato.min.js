@@ -499,120 +499,6 @@
         return p[1];
     }
 
-    const test = [10,6,3,4,7,1,2,5];
-
-    class ConstrainoDelaunato{
-    	constructor(coords, boundary, k) {
-    		//k is the k-nearest neighbor selection
-    		// if coords are 2D
-    		if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
-    			coords = coords.flat();
-    		} else if (coords && Array.isArray(coords[0]) && coords[0].length !== 2) {
-    			return
-    		}
-    		if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
-    			boundary = boundary.flat();
-    		}
-    		if(boundary) {
-    	//		boundary = this.sortHeap(boundary);
-    			this.sortHeap(test, 1);
-    			this.boundary = this.makaThaEnvelope(boundary);
-    			coords = coords.concat(boundary);
-    		}
-    		this.bound = boundary;
-    		this.boundary = new Delaunator(boundary);
-    		this.delaunator = new Delaunator(coords);
-    //		this.pointInOrOut([1,1]);
-    	}
-
-    	pointInOrOut(point) {
-    		for (let h of this.boundary.hull) {
-    			console.log(h);
-    		}
-    //		console.log(this.coords);
-    //		for (let e = 0; e < this.delaunator.triangles.length; e++) {
-    //			if (e > this.delaunator.halfedges[e]) {
-    //				let p = points[this.delaunator.triangles[e]];
-    //				let q = points[this.delaunator.triangles[nextHalfedge(e)]];
-    //			}
-    //		}
-    	}
-
-    	makaThaEnvelope(arr, k) {
-    //k nearest neighbor babbbbyyyy
-    //https://towardsdatascience.com/the-concave-hull-c649795c0f0f
-    		
-
-    	}
-
-    	sortHeap(arr, dim) {
-    		let newArr = [];
-    		let minY = Infinity;
-    		let minX = Infinity;
-    		//convert point arr to 2d -> easier for me to get my head around sorting
-    		if (dim > 1) {
-    			while(arr.length) newArr.push(arr.splice(0, dim));
-    		}
-    		else{
-    			newArr = arr.slice();
-    		}
-
-    		for (let p = 0; p < newArr.length; p++) {
-    			//TODO remove
-    			if (newArr[p] < minY) {
-    				minY = newArr[p];
-    			}
-
-    //			if (newArr[p][1] < minY) {
-    //				minX = newArr[p][0];
-    //				minY = newArr[p][1];
-    //				index = p;
-    //			}
-    //			else if (newArr[p][1] <= minY && newArr[p][0] <= minX) {
-    //				minX = newArr[p][0];
-    //				minY = newArr[p][1];
-    //				index = p;
-    //			}
-    		}
-    		console.log(minY, newArr.slice());
-    //		builtInSort([minX, minY], newArr);
-    		//		TODO change back
-    //		heapSort([minX, minY], newArr, newArr.length);
-    		heapSort(minX, newArr, newArr.length);
-
-    		return newArr.flat();
-    	}
-
-    	update(point) {
-    		let c = this.coords;
-    		for (let p of point.flat()) {
-    			c.push(p);
-    		}
-    		this.delaunator = new Delaunator(c);
-    	}
-
-    	get coords2D() {
-    		let c2D = [];
-    		let c1D = this.coords;
-    		for (let i = 0; i < c1D.length; i += 2) {
-    			c2D.push(this.c1D[i], this.c1D[i + 1]);
-    		}
-    		return c2D;
-    	}
-
-    	get coords() {
-    		return this.delaunator.coords;
-    	}
-
-    	get triangles() {
-    		return this.delaunator.triangles;
-    	}
-
-    	get hull() {
-    		return this.delaunator.hull;
-    	}
-    }
-
     function dotProduct(a, b) {
     	let p = {x: a[0], y: a[1]};
     	let o = {x: b[0], y: b[1]};
@@ -628,33 +514,26 @@
     //heap sort 2d array by angle
     function heapSort(point, a, count, p) {
     	let func;
-    	let prom = new Promise((res, rej) => {
-    		if (p === 'dist'){
-    			func = manhattenDist;
-    		} else if (!Array.isArray(a[0])) {
-    			console.log('here');
-    			func = (a, b) => a - b;
-    		} else {
-    			func = dotProduct;
-    		}
-    		return res();
-    	});
-    	
-    	prom.then((res)=> {
-    		heapify(point, a, count, func);
-    		return console.log(point, a, count);
-    	}).then((r)=> {
-    		let end = count - 1;
-    		while (end > 0) {
-    			swap$1(a, end, 0);
-    			end--;
-    			siftDown(point, a, 0, end, func);
-    		}
-    	}).then(() => {
-    		for (let r of a) {
-    			console.log(r, func(r, point));
-    		}
-    	}).catch((e) => console.log('uhoh'));
+    	if (p === 'dist'){
+    		func = manhattenDist;
+    	} else if (!Array.isArray(a[0])) {
+    		point = point[0];
+    		func = (a, b) => a - b;
+    	} else {
+    		func = dotProduct;
+    	}
+
+    	heapify(point, a, count, func);
+
+    	let end = count - 1;
+    	while (end > 0) {
+    		swap$1(a, end, 0);
+    		end--;
+    		siftDown(point, a, 0, end, func);
+    	}
+    //	for (let r of a) {
+    //		console.log(r, func(r, point));
+    //	}
     }
 
     function heapify(point, a, count, func) {
@@ -674,23 +553,19 @@
     		let child = left(root);
     		let s = root;
     		let dot = (i) => { 
-    //			return dotProduct(a[i], point);
     			let t = func(a[i], point);
-    //			console.log(a[i], point, t);
     			return t;
     		};
-    		let dotOld = dot(s); 
 
-    		if (dotOld < dot(child)) {
+    		if (dot(s) < dot(child)) {
     			s = child;
     		}
-    		if (child + 1 <= end && dotOld < dot(child + 1)) {
+    		if (child + 1 <= end && dot(s) < dot(child + 1)) {
     			s = child + 1;
     		}
     		if (s === root) {
     			return;
     		} else {
-    //			console.log(`swap ${a[root]} ${a[s]}`);
     			swap$1(a, root, s);
     			root = s;
     		}
@@ -701,6 +576,135 @@
     	let t = a[i];
     	a[i] = a[j];
     	a[j] = t;
+    }
+
+    const test = [10,6,3,4,7,1,2,5];
+
+    class Boundary{
+    	constructor(arr) {
+    		this.coords = arr.slice();
+    		console.log(this.coords);
+    		this.indices = [];
+    	}
+
+    	makaThaEnvelope(arr, k) {
+    //k nearest neighbor babbbbyyyy
+    //https://towardsdatascience.com/the-concave-hull-c649795c0f0f
+
+    	}
+
+    	get coords2D() {
+    		let newArr = [];
+    		let arr = this.coords.slice();
+    		while(arr.length) newArr.push(arr.splice(0, 2));
+    		return newArr;
+    	}
+    }
+
+    class ConstrainoDelaunato{
+    	constructor(coords, boundary, k) {
+    		//k is the k-nearest neighbor selection
+    		// if coords are 2D
+    		if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
+    			coords = coords.flat();
+    		} else if (coords && Array.isArray(coords[0]) && coords[0].length !== 2) {
+    			return
+    		}
+    		if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
+    			boundary = boundary.flat();
+    		}
+    		if(boundary) {
+    			this.boundary = new Boundary(sortHeap(boundary, 2));
+    			sortHeap(test, 1);
+    			coords = coords.concat(this.boundary.coords);
+    		}
+    		this.delaunator = new Delaunator(coords);
+    //		this.pointInOrOut([1,1]);
+    	}
+
+    	pointInOrOut(point) {
+    		for (let h of this.boundary.hull) {
+    			console.log(h);
+    		}
+    //		console.log(this.coords);
+    //		for (let e = 0; e < this.delaunator.triangles.length; e++) {
+    //			if (e > this.delaunator.halfedges[e]) {
+    //				let p = points[this.delaunator.triangles[e]];
+    //				let q = points[this.delaunator.triangles[nextHalfedge(e)]];
+    //			}
+    //		}
+    	}
+
+
+    	update(point) {
+    		let c = this.coords;
+    		for (let p of point.flat()) {
+    			c.push(p);
+    		}
+    		this.delaunator = new Delaunator(c);
+    	}
+
+    	get coords2D() {
+    		let c2D = [];
+    		let c1D = this.coords;
+    		for (let i = 0; i < c1D.length; i += 2) {
+    			c2D.push([c1D[i], c1D[i + 1]]);
+    		}
+    		return c2D;
+    	}
+
+    	get coords() {
+    		return this.delaunator.coords;
+    	}
+
+    	get triangles() {
+    		return this.delaunator.triangles;
+    	}
+
+    	get hull() {
+    		return this.delaunator.hull;
+    	}
+
+    	get bound() {
+    		return this.boundary.coords;
+    	}
+    }
+
+    function sortHeap(arr, dim) {
+    		let newArr = [];
+    		let minY = Infinity;
+    		let minX = Infinity;
+    		//convert point arr to 2d -> easier for me to get my head around sorting
+    		if (dim > 1) {
+    			while(arr.length) newArr.push(arr.splice(0, dim));
+    		}
+    		else{
+    			newArr = arr.slice();
+    		}
+    		if (Array.isArray(newArr[0])) {
+    			for (let p = 0; p < newArr.length; p++) {
+    				if (newArr[p][1] < minY) {
+    					minX = newArr[p][0];
+    					minY = newArr[p][1];
+    				}
+    				else if (newArr[p][1] <= minY && newArr[p][0] <= minX) {
+    					minX = newArr[p][0];
+    					minY = newArr[p][1];
+    				}
+    			}
+    		} else {
+    			for (let p = 0; p < newArr.length; p++) {
+    				if (newArr[p] < minX) {
+    					minX = newArr[p];
+    				}
+    			}
+    		}
+    		console.log(minX, newArr.slice());
+    //		builtInSort([minX, minY], newArr);
+    		heapSort([minX, minY], newArr, newArr.length);
+    		console.log(minX, newArr.slice());
+
+    		return newArr.flat();
     }
 
     return ConstrainoDelaunato;
