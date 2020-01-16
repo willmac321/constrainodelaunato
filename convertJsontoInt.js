@@ -1,6 +1,5 @@
 const fs = require('fs');
 
-
 function dothething(jso) {
 
 	let raw  = fs.readFileSync(jso);

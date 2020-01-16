@@ -20,7 +20,6 @@ var bound = [[253,163],[127, 200],[130, 25], [253,162],[253,161],[254,160],[254,
 console.time('delaunay');
 var delaunay = new ConstrainoDelaunato(points, bound);
 var updateArr = delaunay.coords2D;
-console.log(updateArr);
 console.timeEnd('delaunay');
 
 var canvas = document.getElementById('canvas');

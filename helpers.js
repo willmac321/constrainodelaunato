@@ -1,3 +1,5 @@
+var c; 
+
 function nextHalfEdge(e) {
 	return (e % 3 === 2) ? e - 2 : e + 1;
 }
@@ -6,6 +8,20 @@ function dotProduct(a, b) {
 	let p = {x: a[0], y: a[1]};
 	let o = {x: b[0], y: b[1]};
 	return p.x*o.x + p.y*o.y;
+}
+
+function dotPolar(a, b) {
+	// b is basis point
+	// put those bad boys in order ccw around some centroid point that globally declared
+	let o = {x: c.x - a[0], y: c.y - a[1]};
+	let p = {x: c.x - b[0], y: c.y - b[1]};
+	let magO = Math.sqrt(Math.pow(o.x, 2) + Math.pow(o.y, 2));
+	let magP = Math.sqrt(Math.pow(p.x, 2) + Math.pow(p.y, 2));
+	let theta = Math.acos((p.x*o.x + p.y*o.y) / (magO * magP)) * 180 / Math.PI;
+	let det = (o.x * p.y) - (p.x * o.y);
+	theta = isNaN(theta) ? 0 : theta;
+	theta = det > 0 ? 360 - theta : theta;
+	return theta;
 }
 
 function manhattenDist(a, b) {
@@ -22,10 +38,13 @@ function builtInSort(point, arr) {
 }
 
 //heap sort 2d array by angle
-export function heapSort(point, a, count, p) {
+export function heapSort(point, a, count, p, center) {
 	let func;
 	if (p === 'dist'){
 		func = manhattenDist;
+	} else if (p === 'polar') {
+		func = dotPolar;
+		c = {x: center[0], y: center[1]};
 	} else if (!Array.isArray(a[0])) {
 		point = point[0];
 		func = (a, b) => a - b;

@@ -499,10 +499,26 @@
         return p[1];
     }
 
+    var c; 
+
     function dotProduct(a, b) {
     	let p = {x: a[0], y: a[1]};
     	let o = {x: b[0], y: b[1]};
     	return p.x*o.x + p.y*o.y;
+    }
+
+    function dotPolar(a, b) {
+    	// b is basis point
+    	// put those bad boys in order ccw around some centroid point that globally declared
+    	let o = {x: c.x - a[0], y: c.y - a[1]};
+    	let p = {x: c.x - b[0], y: c.y - b[1]};
+    	let magO = Math.sqrt(Math.pow(o.x, 2) + Math.pow(o.y, 2));
+    	let magP = Math.sqrt(Math.pow(p.x, 2) + Math.pow(p.y, 2));
+    	let theta = Math.acos((p.x*o.x + p.y*o.y) / (magO * magP)) * 180 / Math.PI;
+    	let det = (o.x * p.y) - (p.x * o.y);
+    	theta = isNaN(theta) ? 0 : theta;
+    	theta = det > 0 ? 360 - theta : theta;
+    	return theta;
     }
 
     function manhattenDist(a, b) {
@@ -512,10 +528,13 @@
     }
 
     //heap sort 2d array by angle
-    function heapSort(point, a, count, p) {
+    function heapSort(point, a, count, p, center) {
     	let func;
     	if (p === 'dist'){
     		func = manhattenDist;
+    	} else if (p === 'polar') {
+    		func = dotPolar;
+    		c = {x: center[0], y: center[1]};
     	} else if (!Array.isArray(a[0])) {
     		point = point[0];
     		func = (a, b) => a - b;
@@ -578,15 +597,28 @@
     	a[j] = t;
     }
 
-    const test = [10,6,3,4,7,1,2,5];
-
     class Boundary{
     	constructor(arr) {
     		this.coords = arr.slice();
-    		console.log(this.coords);
     		this.indices = [];
+    		this.center = this.calcCenter();
+    		this.coords = sortHeap(this.coords, 2, 'polar', [this.center.x, this.center.y]);
     	}
 
+    	//concave center point
+    	calcCenter() {
+    		let p = {x: 0, y: 0};
+
+    		for (let i = 0; i < this.coords.length; i += 2) {
+    			p.x += this.coords[i];
+    			p.y += this.coords[i + 1];
+    		}
+
+    		p.x = p.x / (this.coords.length / 2);
+    		p.y = p.y / (this.coords.length / 2);
+
+    		return p;
+    	}
     	makaThaEnvelope(arr, k) {
     //k nearest neighbor babbbbyyyy
     //https://towardsdatascience.com/the-concave-hull-c649795c0f0f
@@ -614,8 +646,8 @@
     			boundary = boundary.flat();
     		}
     		if(boundary) {
-    			this.boundary = new Boundary(sortHeap(boundary, 2));
-    			sortHeap(test, 1);
+    			this.boundary = new Boundary(boundary);
+    //			sortHeap(test, 1)
     			coords = coords.concat(this.boundary.coords);
     		}
     		this.delaunator = new Delaunator(coords);
@@ -670,7 +702,7 @@
     	}
     }
 
-    function sortHeap(arr, dim) {
+    function sortHeap(arr, dim, criteria, centerPoint) {
     		let newArr = [];
     		let minY = Infinity;
     		let minX = Infinity;
@@ -699,10 +731,10 @@
     				}
     			}
     		}
-    		console.log(minX, newArr.slice());
+    		console.log(minX, minY, newArr.slice());
     //		builtInSort([minX, minY], newArr);
-    		heapSort([minX, minY], newArr, newArr.length);
-    		console.log(minX, newArr.slice());
+    		heapSort([minX, minY], newArr, newArr.length, criteria, centerPoint);
+    		console.log(minX, minY, newArr.slice());
 
     		return newArr.flat();
     }

@@ -6,10 +6,25 @@ const test = [10,6,3,4,7,1,2,5];
 class Boundary{
 	constructor(arr) {
 		this.coords = arr.slice();
-		console.log(this.coords);
 		this.indices = [];
+		this.center = this.calcCenter();
+		this.coords = sortHeap(this.coords, 2, 'polar', [this.center.x, this.center.y]);
 	}
 
+	//concave center point
+	calcCenter() {
+		let p = {x: 0, y: 0};
+
+		for (let i = 0; i < this.coords.length; i += 2) {
+			p.x += this.coords[i];
+			p.y += this.coords[i + 1];
+		}
+
+		p.x = p.x / (this.coords.length / 2)
+		p.y = p.y / (this.coords.length / 2)
+
+		return p;
+	}
 	makaThaEnvelope(arr, k) {
 //k nearest neighbor babbbbyyyy
 //https://towardsdatascience.com/the-concave-hull-c649795c0f0f
@@ -37,8 +52,8 @@ export default class ConstrainoDelaunato{
 			boundary = boundary.flat();
 		}
 		if(boundary) {
-			this.boundary = new Boundary(sortHeap(boundary, 2));
-			sortHeap(test, 1)
+			this.boundary = new Boundary(boundary);
+//			sortHeap(test, 1)
 			coords = coords.concat(this.boundary.coords);
 		}
 		this.delaunator = new Delaunator(coords);
@@ -95,7 +110,7 @@ export default class ConstrainoDelaunato{
 	}
 }
 
-function sortHeap(arr, dim) {
+function sortHeap(arr, dim, criteria, centerPoint) {
 		let newArr = [];
 		let index = 0;
 		let minY = Infinity;
@@ -128,10 +143,10 @@ function sortHeap(arr, dim) {
 				}
 			}
 		}
-		console.log(minX, newArr.slice());
+		console.log(minX, minY, newArr.slice());
 //		builtInSort([minX, minY], newArr);
-		heapSort([minX, minY], newArr, newArr.length);
-		console.log(minX, newArr.slice());
+		heapSort([minX, minY], newArr, newArr.length, criteria, centerPoint);
+		console.log(minX, minY, newArr.slice());
 
 		return newArr.flat();
 }

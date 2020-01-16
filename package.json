@@ -28,10 +28,9 @@
     "lint": "eslint index.js test/test.js bench.js rollup.config.js docs/diagrams.js",
     "pretest": "npm run lint",
     "test": "node -r esm test/test.js",
-    "cov": "c8 node -r esm test/test.js && c8 report -r html",
     "bench": "node -r esm bench.js",
     "build": "rollup -c",
-    "start": "rollup -cw",
+    "start": "browser-sync start --server --files './*.js' './main.html' --index \"main.html\" & rollup -cw",
     "prepublishOnly": "npm test && npm run build",
     "dev": "browser-sync start --server --files './*.js' './main.html' --index \"main.html\""
   },
