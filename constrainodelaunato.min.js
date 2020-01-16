@@ -500,7 +500,8 @@
     }
 
     class ConstrainoDelaunato{
-    	constructor(coords, boundary) {
+    	constructor(coords, boundary, k) {
+    		//k is the k-nearest neighbor selection
     		// if coords are 2D
     		if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
     			coords = coords.flat();
@@ -511,16 +512,57 @@
     			boundary = boundary.flat();
     		}
     		if(boundary) {
+    			boundary = this.sortHeap(boundary);
+    			this.boundary = this.makaThaEnvelope(boundary);
     			coords = coords.concat(boundary);
     		}
-    		this.boundary = boundary;
-    		console.log(coords);
+    		this.bound = boundary;
+    		this.boundary = new Delaunator(boundary);
     		this.delaunator = new Delaunator(coords);
+    //		this.pointInOrOut([1,1]);
     	}
 
     	pointInOrOut(point) {
+    		for (let h of this.boundary.hull) {
+    			console.log(h);
+    		}
+    //		console.log(this.coords);
+    //		for (let e = 0; e < this.delaunator.triangles.length; e++) {
+    //			if (e > this.delaunator.halfedges[e]) {
+    //				let p = points[this.delaunator.triangles[e]];
+    //				let q = points[this.delaunator.triangles[nextHalfedge(e)]];
+    //			}
+    //		}
+    	}
 
+    	makaThaEnvelope(arr, k) {
+    //k nearest neighbor babbbbyyyy
+    //https://towardsdatascience.com/the-concave-hull-c649795c0f0f
+    		
 
+    	}
+
+    	sortHeap(arr) {
+    		let newArr = [];
+    		let minY = Infinity;
+    		let minX = Infinity;
+    		//convert point arr to 2d -> easier for me to get my head around sorting
+    		while(arr.length) newArr.push(arr.splice(0, 2));
+    		//find min point in y then x - Graham _ scan
+    		for (let p = 0; p < newArr.length; p++) {
+    			if (newArr[p][1] < minY) {
+    				minX = newArr[p][0];
+    				minY = newArr[p][1];
+    			}
+    			else if (newArr[p][1] <= minY && newArr[p][0] <= minX) {
+    				minX = newArr[p][0];
+    				minY = newArr[p][1];
+    			}
+    		}
+    		builtInSort([minX, minY], newArr);
+    	//	heapSort([minX, minY], newArr, newArr.length);
+
+    		return newArr.flat();
     	}
 
     	update(point) {
@@ -551,9 +593,19 @@
     	get hull() {
     		return this.delaunator.hull;
     	}
+    }
 
+    function dotProduct(a, b) {
+    	let p = {x: a[0], y: a[1]};
+    	let o = {x: b[0], y: b[1]};
+    	return p.x*o.x + p.y*o.y;
+    }
 
-
+    function builtInSort(point, arr) {
+    	return arr.sort((a, b) => {
+    //		return manhattenDist(point, a) - manhattenDist(point, b)
+    		return dotProduct(point, a) - dotProduct(point, b)
+    	});
     }
 
     return ConstrainoDelaunato;
