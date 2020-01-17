@@ -4,7 +4,51 @@ function nextHalfEdge (e) {
   return (e % 3 === 2) ? e - 2 : e + 1
 }
 
-function dotProduct (a, b) {
+/***
+ * @param p is a line segment of type {x0, y0, x1, y1}
+ * @param l is a line segment of type {x0, y0, x1, y1}
+ * @return {x, y} at intersect, if they dont intersect, they intersect at infinity
+ ***/
+export function intersect (p, l) {
+  // compare two line segments to see if they intersect
+  const den = ((l.y1 - l.y0) * (p.x1 - p.x0)) - ((l.x1 - l.x0) * (p.y1 - p.y0))
+  if (den === 0) {
+    return { x: Infinity, y: Infinity }
+  }
+
+  let a = p.y0 - l.y0
+  let b = p.x0 - l.x0
+
+  const num1 = ((l.x1 - l.x0) * a) - ((l.y1 - l.y0) * b)
+  const num2 = ((p.x1 - p.x0) * a) - ((p.y1 - p.y0) * b)
+
+  a = num1 / den
+  b = num2 / den
+
+  const rv = {
+    x: p.x0 + (a * (p.x1 - p.x0)),
+    y: p.y0 + (a * (p.y1 - p.y0))
+  }
+
+  const t = { a: false, b: false }
+
+  // if (p.y1 === rv.y) {
+  // console.log(a, b);
+  // }
+  //
+  if (a >= 0 && a < 1) {
+    t.a = true
+  }
+  if (b >= 0 && b < 1) {
+    t.b = true
+  }
+  if (t.a && t.b) {
+    return rv
+  }
+  return { x: Infinity, y: Infinity }
+}
+
+export function dotProduct (a, b) {
   const p = { x: a[0], y: a[1] }
   const o = { x: b[0], y: b[1] }
   return p.x * o.x + p.y * o.y

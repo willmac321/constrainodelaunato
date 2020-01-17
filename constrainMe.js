@@ -1,5 +1,5 @@
 import Delaunator from 'delaunator'
-import { heapSort } from './helpers'
+import { heapSort, intersect, dotProduct } from './helpers'
 
 // const test = [10, 6, 3, 4, 7, 1, 2, 5]
 
@@ -22,10 +22,10 @@ class Boundary {
   }
 
   testFunctions () {
-    this.pointInOrOut([this.center.x, this.center.y])
-    this.pointInOrOut([this.minX.x + 1000, this.minX.y])
-    console.log(this.pointInOrOut([180, 100]))
-   // this.concave(10)
+    this.pointInOrOut([this.center.x, this.center.y], this.index)
+    this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index)
+    console.log(this.pointInOrOut([180, 100], this.index))
+    //console.log(this.concave(3))
   }
 
   concave (k) {
@@ -33,7 +33,8 @@ class Boundary {
     // https://towardsdatascience.com/the-concave-hull-c649795c0f0f
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
-    this.sortHeapAndClean(this.coords, 2, 'polar', [this.center.x, this.center.y])
+    // also sort it so all points are in order from some min point  on the xy plane
+    this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y])
 
     let index = this.index.slice()
     if (index.length < 3) {
@@ -41,14 +42,14 @@ class Boundary {
     } else if (index.length === 3) {
       return index
     }
-    const kk = Math.min(Math.max(k, 3), index.length - 1)
+    let kk = Math.min(Math.max(k, 3), index.length - 1)
     const firstPoint = this.minY.i
-    const currentPoint = firstPoint
-    const previousAngle = 0
+    let currentPoint = firstPoint
+    let previousAngle = 0
     this.hull = [firstPoint]
 
     // TODO why is step init to 2?
-    const step = 2
+    let step = 2
     index = index.splice(index.indexOf(firstPoint), 1)
 
     while ((currentPoint !== firstPoint || step === 2) && (index.length > 0)) {
@@ -56,11 +57,68 @@ class Boundary {
         index = index.push(firstPoint)
       }
       const kNearestPoints = this.nearestPoints(index, currentPoint, kk)
+      let cPoints = this.subset(kNearestPoints)
+      cPoints = sortHeap(cPoints, kNearestPoints, 'dot', [this.coords[currentPoint], this.coords[currentPoint + 1]])
+      console.log(cPoints)
+      let its = true
+      let i = 0
+      while (its && i < cPoints.length) {
+        let lastPoint = 0
+        i++
+        if (cPoints[i] === firstPoint) {
+          lastPoint = 1
+        }
+        let j = 2
+        its = false
+        while (!its && j < this.hull.length - lastPoint) {
+          const l = {
+            x0: this.coords[this.hull[step - 1]],
+            y0: this.coords[this.hull[step - 1] + 1],
+            x1: this.coords[cPoints[i]],
+            y1: this.coords[cPoints[i] + 1]
+          }
+          const p = {
+            x0: this.coords[this.hull[step - 1 - j]],
+            y0: this.coords[this.hull[step - 1 - j] + 1],
+            x1: this.coords[this.hull[step - j]],
+            y1: this.coords[this.hull[step - j] + 1]
+          }
+          its = isFinite(intersect(p, l).x)
+          j++
+        }
+        if (its) {
+          return this.concave(++kk)
+        }
+        currentPoint = cPoints[i]
+        this.hull.push(currentPoint)
+        previousAngle = dotProduct(
+          [this.coords[currentPoint], this.coords[currentPoint + 1]],
+          [this.coords[this.hull[this.hull.length - 2]], this.coords[this.hull[this.hull.length - 2] + 1]])
+        index = index.splice(index.indexOf(currentPoint), 1)
+        step++
+      }
     }
+    let allInside = true
+    let i = index.length
+    while (allInside && i > 0) {
+      allInside = this.pointInOrOut(
+        [this.coords[index[i]], this.coords[index[i] + 1]],
+        index)
+      i--
+    }
+    if (!allInside) {
+      return this.concave(++kk)
+    }
+    return this.hull
   }
 
   nearestPoints (index, cP, kk) {
-    
+    const rv = []
+    kk = Math.min(kk, index.length - 1)
+    for (let i = 0; i < kk; i++) {
+      rv.push(cP + i)
+    }
+    return rv
   }
 
   sortHeapAndClean (arr, ind, criteria, centerPoint) {
@@ -124,7 +182,7 @@ class Boundary {
     return p
   }
 
-  pointInOrOut (point) {
+  pointInOrOut (point, index) {
     // assume ray going to + infinity on x plane here just making assumption that it extends 1000 units past whatever the minimum x value is in the boundary
     const p = {
       x0: point[0], y0: point[1], x1: this.minX.x - 1000, y1: point[1]
@@ -134,15 +192,15 @@ class Boundary {
     // lets use non-zero winding number rule
     let windingNum = 0
 
-    for (let i = 0; i < this.index.length; i++) {
+    for (let i = 0; i < index.length; i++) {
       const l = {
-        x0: this.coords[this.index[i]],
-        y0: this.coords[this.index[i] + 1],
-        x1: this.coords[this.index[(i + 1) > this.index.length - 1 ? 0 : i + 1]],
-        y1: this.coords[this.index[(i + 1) > this.index.length - 1 ? 0 : i + 1] + 1]
+        x0: this.coords[index[i]],
+        y0: this.coords[index[i] + 1],
+        x1: this.coords[index[(i + 1) > index.length - 1 ? 0 : i + 1]],
+        y1: this.coords[index[(i + 1) > index.length - 1 ? 0 : i + 1] + 1]
       }
-      const intersect = this.intersect(p, l)
-      if (isFinite(intersect.x)) {
+      const inters = intersect(p, l)
+      if (isFinite(inters.x)) {
         if (l.y1 - l.y0 > 0) {
           windingNum++
         } else if (l.y1 - l.y0 < 0) {
@@ -150,46 +208,16 @@ class Boundary {
         }
       }
     }
-    // console.log(windingNum)
+    console.log(windingNum !== 0)
     return windingNum !== 0
   }
 
-  intersect (p, l) {
-    const den = ((l.y1 - l.y0) * (p.x1 - p.x0)) - ((l.x1 - l.x0) * (p.y1 - p.y0))
-    if (den === 0) {
-      return { x: Infinity, y: Infinity }
+  subset (indices) {
+    const rv = []
+    for (const i of indices) {
+      rv.push(this.coords[i], this.coords[i + 1])
     }
-
-    let a = p.y0 - l.y0
-    let b = p.x0 - l.x0
-
-    const num1 = ((l.x1 - l.x0) * a) - ((l.y1 - l.y0) * b)
-    const num2 = ((p.x1 - p.x0) * a) - ((p.y1 - p.y0) * b)
-
-    a = num1 / den
-    b = num2 / den
-
-    const rv = {
-      x: p.x0 + (a * (p.x1 - p.x0)),
-      y: p.y0 + (a * (p.y1 - p.y0))
-    }
-
-    const t = { a: false, b: false }
-
-    // if (p.y1 === rv.y) {
-    // console.log(a, b);
-    // }
-    //
-    if (a >= 0 && a < 1) {
-      t.a = true
-    }
-    if (b >= 0 && b < 1) {
-      t.b = true
-    }
-    if (t.a && t.b) {
-      return rv
-    }
-    return { x: Infinity, y: Infinity }
+    return rv
   }
 
   get coords2D () {
