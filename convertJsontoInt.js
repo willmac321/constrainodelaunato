@@ -16,6 +16,7 @@ function dothething (jso) {
   }
 
   fs.writeFileSync('temp' + process.argv[2], JSON.stringify(obj))
+  console.log(`file saved as temp${jso}`)
 }
 
 dothething(process.argv[2])

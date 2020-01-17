@@ -14,6 +14,7 @@ class Boundary {
     this.minY = minimumPointY(this.coords, this.index)
     this.minX = minimumPointX(this.coords, this.index)
     this.ray = null
+    this.hull = []
 
     // center of test from html is not inside boundary
     // this point is though
@@ -24,6 +25,7 @@ class Boundary {
     this.pointInOrOut([this.center.x, this.center.y])
     this.pointInOrOut([this.minX.x + 1000, this.minX.y])
     console.log(this.pointInOrOut([180, 100]))
+   // this.concave(10)
   }
 
   concave (k) {
@@ -31,22 +33,40 @@ class Boundary {
     // https://towardsdatascience.com/the-concave-hull-c649795c0f0f
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
-    this.coords = this.sortHeapAndClean(this.coords, 2, 'polar', [this.center.x, this.center.y])
+    this.sortHeapAndClean(this.coords, 2, 'polar', [this.center.x, this.center.y])
 
-    let kk = Math.max(k, 3)
-    const dataset = this.coords2D
-    if (dataset.length < 3) {
+    let index = this.index.slice()
+    if (index.length < 3) {
       return null
-    } else if (dataset.length === 3) {
-      return dataset.flat
+    } else if (index.length === 3) {
+      return index
     }
-    kk = Math.min(kk, dataset.length - 1)
+    const kk = Math.min(Math.max(k, 3), index.length - 1)
+    const firstPoint = this.minY.i
+    const currentPoint = firstPoint
+    const previousAngle = 0
+    this.hull = [firstPoint]
+
+    // TODO why is step init to 2?
+    const step = 2
+    index = index.splice(index.indexOf(firstPoint), 1)
+
+    while ((currentPoint !== firstPoint || step === 2) && (index.length > 0)) {
+      if (step === 5) {
+        index = index.push(firstPoint)
+      }
+      const kNearestPoints = this.nearestPoints(index, currentPoint, kk)
+    }
+  }
+
+  nearestPoints (index, cP, kk) {
+    
   }
 
   sortHeapAndClean (arr, ind, criteria, centerPoint) {
-    console.log(this.index, this.coords2D)
+    // console.log(this.index, this.coords2D)
     this.index = sortHeap(arr.slice(), this.index.slice(), criteria, centerPoint)
-    console.log(this.index, this.coords2D)
+    // console.log(this.index, this.coords2D)
     this.clean()
     return this.coords
   }
@@ -105,12 +125,12 @@ class Boundary {
   }
 
   pointInOrOut (point) {
-    // assume ray going to + infinity on x plane
+    // assume ray going to + infinity on x plane here just making assumption that it extends 1000 units past whatever the minimum x value is in the boundary
     const p = {
       x0: point[0], y0: point[1], x1: this.minX.x - 1000, y1: point[1]
     }
     this.ray = p
-    console.log(this.ray)
+    // console.log(this.ray)
     // lets use non-zero winding number rule
     let windingNum = 0
 
@@ -121,7 +141,6 @@ class Boundary {
         x1: this.coords[this.index[(i + 1) > this.index.length - 1 ? 0 : i + 1]],
         y1: this.coords[this.index[(i + 1) > this.index.length - 1 ? 0 : i + 1] + 1]
       }
-      // console.log(l, p)
       const intersect = this.intersect(p, l)
       if (isFinite(intersect.x)) {
         if (l.y1 - l.y0 > 0) {
@@ -131,7 +150,7 @@ class Boundary {
         }
       }
     }
-    console.log(windingNum)
+    // console.log(windingNum)
     return windingNum !== 0
   }
 
