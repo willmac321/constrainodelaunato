@@ -1,0 +1,70 @@
+"let b:usemarks=1
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+call plug#begin('~/.vim/plugged')
+" " plugin on GitHub repo
+Plug 'tpope/vim-fugitive'
+
+Plug 'scrooloose/nerdtree'
+
+Plug 'tpope/vim-surround'
+
+"VUE plugin for vim
+Plug 'posva/vim-vue'
+
+"vim colorscheme pack
+Plug 'flazz/vim-colorschemes'
+
+Plug 'w0rp/ale'
+
+Plug 'godlygeek/tabular'
+
+Plug 'kien/ctrlp.vim'
+
+call plug#end()
+filetype on
+
+syntax enable
+
+set term=screen-256color
+let NERDTreeShowHidden=1
+set number
+set ruler
+colorscheme gruvbox 
+if &term =~ '256color'
+	set t_ut=
+endif
+set background=dark
+set tabstop=4
+set shiftwidth=4
+set noexpandtab
+set hlsearch
+set incsearch
+set cursorline
+set showmatch
+    
+let g:ale_sign_error = '✘'
+let g:ale_sign_warning = '⚠'
+highlight ALEErrorSign ctermbg=NONE ctermfg=red
+highlight ALEWarningSign ctermbg=NONE ctermfg=yellow
+
+let g:ale_fixers ={
+			\	'javascript': ['eslint'],
+			\}
+
+inoremap <c-s> <c-o>$
+inoremap <c-a> <c-o>0
+
+inoremap <s-tab> <c-d>
+
+inoremap jj <Esc>
+inoremap jk <Esc>
+inoremap kj <Esc>
+
+" move by visual line not file line
+nnoremap j gj
+nnoremap k gk
+
+autocmd vimenter * NERDTree 
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
