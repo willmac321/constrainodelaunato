@@ -1,8 +1,19 @@
 var c
 
+// Unused functions
+/* eslint-disable */
 function nextHalfEdge (e) {
   return (e % 3 === 2) ? e - 2 : e + 1
 }
+
+function builtInSort (point, arr) {
+  return arr.sort((a, b) => {
+    // return manhattenDist(point, a) - manhattenDist(point, b)
+    return (dotProduct(point, a) - dotProduct(point, b))
+  })
+}
+
+/* eslint-enable */
 
 /***
  * @param p is a line segment of type {x0, y0, x1, y1}
@@ -74,50 +85,59 @@ function manhattenDist (a, b) {
   return Math.abs(p.x - o.x) + Math.abs(p.y - o.y)
 }
 
-function builtInSort (point, arr) {
-  return arr.sort((a, b) => {
-    // return manhattenDist(point, a) - manhattenDist(point, b)
-    return (dotProduct(point, a) - dotProduct(point, b))
-  })
+function euclid (a, b) {
+  const p = { x: a[0], y: a[1] }
+  const o = { x: b[0], y: b[1] }
+  return Math.sqrt(Math.pow(p.x - o.x, 2) + Math.pow(p.y - o.y, 2))
 }
 
 // heap sort 2d array by angle
-export function heapSort (point, index, a, count, p, center) {
+export function heapSort (minpoint, index, a, count, p, center) {
   let func
+
   if (p === 'dist') {
     func = manhattenDist
+  } else if (p === 'distrel') {
+    func = manhattenDist
+  } else if (p === 'euclid') {
+    func = euclid
   } else if (p === 'polar') {
     func = dotPolar
     c = { x: center[0], y: center[1] }
   } else if (p === 'dot') {
     func = dotProduct
   } else if (!Array.isArray(a[0])) {
-    point = point[0]
+    minpoint = minpoint[0]
     func = (a, b) => a - b
   } else {
     func = dotProduct
   }
 
-  heapify(point, a, index, count, func)
+  heapify(minpoint, a, index, count, func, p)
 
   let end = count - 1
   while (end > 0) {
     swap(index, end, 0)
     end--
-    siftDown(point, a, index, 0, end, func)
+    siftDown(minpoint, a, index, 0, end, func, p)
   }
+
+//  for (const i of index) {
+//    console.log(i, a[i], a[i + 1], func([a[i], a[i + 1]], minpoint))
+//  }
+//  console.log(minpoint)
 }
 
-function heapify (point, a, index, count, func) {
+function heapify (point, a, index, count, func, p) {
   const par = (i) => Math.floor((i - 1) / 2)
   let start = par(count - 1)
   while (start >= 0) {
-    siftDown(point, a, index, start, count - 1, func)
+    siftDown(point, a, index, start, count - 1, func, p)
     start--
   }
 }
 
-function siftDown (point, a, index, start, end, func) {
+function siftDown (point, a, index, start, end, func, p) {
   let root = start
   const left = (i) => 2 * i + 1
 
@@ -126,6 +146,9 @@ function siftDown (point, a, index, start, end, func) {
     let s = root
     const dot = (i) => {
       const t = func([a[index[i]], a[index[i] + 1]], point)
+      if (p === 'distrel') {
+        point = [a[index[i]], a[index[i] + 1]]
+      }
       return t
     }
 
