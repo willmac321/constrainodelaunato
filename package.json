@@ -8,7 +8,6 @@
   "unpkg": "constrainodelaunato.min.js",
   "sideEffects": false,
   "dependencies": {
-    "concaveman": "^1.1.1",
     "delaunator": "^4.0.1"
   },
   "devDependencies": {
@@ -42,6 +41,7 @@
   },
   "files": [
     "constrainment.js",
+    "boundary.js",
     "constrainodelaunato.js",
     "constrainodelaunato.min.js"
   ],

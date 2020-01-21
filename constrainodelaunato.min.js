@@ -862,15 +862,21 @@
         // if two points are on the same line eq as current point, currently the further one is considered a 'closer angle', perform swap of these coords below
         console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`);
 
+        let lastSlope = undefined;
+
         for (let k = 0; k < rv.length; k++) {
           let lastPoint = [this.coords[rv[k - 1]], this.coords[rv[k - 1] + 1]];
           if (k === 0) {
             lastPoint = currentPointArr;
           }
           const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]];
+
           console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`);
-        //  if (slope(currentPointArr, newPoint) === currentPointSlope) {
-        //  }
+          if (lastSlope && slope(lastPoint, newPoint) === lastSlope) {
+            //flipflop the two point in array order if the slopes are the same 
+            swap$1 (rv, k, k - 1);
+          }
+          lastSlope = slope(lastPoint, newPoint);
         }
 
         return rv // sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr )
@@ -1014,60 +1020,6 @@
       }
     }
 
-    class ConstrainoDelaunato {
-      constructor (coords, boundary, k) {
-        // k is the k-nearest neighbor selection
-        // if coords are 2D
-        if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
-          coords = coords.flat();
-        } else if (coords && Array.isArray(coords[0]) && coords[0].length !== 2) {
-          return
-        }
-        if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
-          boundary = boundary.flat();
-        }
-        if (boundary) {
-          this.boundary = new Boundary(boundary, k);
-          coords = coords.concat(this.boundary.coords);
-        }
-        this.delaunator = new Delaunator(coords);
-        // this.pointInOrOut([1,1]);
-      }
-
-      update (point) {
-        const c = this.coords;
-        for (const p of point.flat()) {
-          c.push(p);
-        }
-        this.delaunator = new Delaunator(c);
-      }
-
-      get coords2D () {
-        const c2D = [];
-        const c1D = this.coords;
-        for (let i = 0; i < c1D.length; i += 2) {
-          c2D.push([c1D[i], c1D[i + 1]]);
-        }
-        return c2D
-      }
-
-      get coords () {
-        return this.delaunator.coords
-      }
-
-      get triangles () {
-        return this.delaunator.triangles
-      }
-
-      get hull () {
-        return this.delaunator.hull
-      }
-
-      get bound () {
-        return this.boundary.sortedCoords.flat()
-      }
-    }
-
     function sortHeap (arr, index, criteria, minPoint, centerPoint) {
       // convert point arr to 2d -> easier for me to get my head around sorting
 
@@ -1159,6 +1111,60 @@
         }
       }
       return { x: minX, y: minY, i: ind }
+    }
+
+    class ConstrainoDelaunato {
+      constructor (coords, boundary, k) {
+        // k is the k-nearest neighbor selection
+        // if coords are 2D
+        if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
+          coords = coords.flat();
+        } else if (coords && Array.isArray(coords[0]) && coords[0].length !== 2) {
+          return
+        }
+        if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
+          boundary = boundary.flat();
+        }
+        if (boundary) {
+          this.boundary = new Boundary(boundary, k);
+          coords = coords.concat(this.boundary.coords);
+        }
+        this.delaunator = new Delaunator(coords);
+        // this.pointInOrOut([1,1]);
+      }
+
+      update (point) {
+        const c = this.coords;
+        for (const p of point.flat()) {
+          c.push(p);
+        }
+        this.delaunator = new Delaunator(c);
+      }
+
+      get coords2D () {
+        const c2D = [];
+        const c1D = this.coords;
+        for (let i = 0; i < c1D.length; i += 2) {
+          c2D.push([c1D[i], c1D[i + 1]]);
+        }
+        return c2D
+      }
+
+      get coords () {
+        return this.delaunator.coords
+      }
+
+      get triangles () {
+        return this.delaunator.triangles
+      }
+
+      get hull () {
+        return this.delaunator.hull
+      }
+
+      get bound () {
+        return this.boundary.sortedCoords.flat()
+      }
     }
 
     return ConstrainoDelaunato;

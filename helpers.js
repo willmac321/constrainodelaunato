@@ -209,7 +209,7 @@ function siftDown (point, a, index, start, end, func, p) {
   }
 }
 
-function swap (a, i, j) {
+export function swap (a, i, j) {
   const t = a[i]
   a[i] = a[j]
   a[j] = t
