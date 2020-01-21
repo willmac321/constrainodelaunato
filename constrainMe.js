@@ -13,6 +13,7 @@ class Boundary {
     this.center = this.calcCenter()
     this.minY = minimumPointY(this.coords, this.index)
     this.minX = minimumPointX(this.coords, this.index)
+    this.maxX = maximumPointX(this.coords, this.index)
 
     this.ray = null
     this.hull = []
@@ -23,8 +24,8 @@ class Boundary {
   }
 
   testFunctions () {
-    this.pointInOrOut([this.center.x, this.center.y], this.index)
-    this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index)
+    this.pointInOrOut([this.center.x, this.center.y], this.index, this.minX.x - 10)
+    this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index, this.minX.x - 10)
     // console.log(this.pointInOrOut([180, 100], this.index))
     this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.minX.x, this.minY.y])
     this.findHull(3)
@@ -35,7 +36,7 @@ class Boundary {
     this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y], [this.minY.x, this.minY.y])
     // this.index = index
     this.index = this.concave(this.index.slice(), k)
-    this.index = this.index.filter((i) => i !== undefined)
+    // this.index = this.index.filter((i) => i !== undefined)
     console.log(this.index)
     // this.sortHeapAndClean(this.coords, this.index, 'polar', [this.center.x, this.center.y])
   }
@@ -46,7 +47,14 @@ class Boundary {
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
+    const oldIndex = index.slice()
+    console.log('new k', k)
     if (index.length < 3) {
+      console.log('len less than 3')
+      return null
+    } else if (k > 20) {//index.length / 2) {
+      console.log(counter)
+      console.log('k is too big')
       return null
     } else if (index.length === 3) {
       console.log('len 3')
@@ -59,7 +67,6 @@ class Boundary {
     const firstPointIndex = minimumPointY(this.coords, index).i
     const firstPoint = { i: firstPointIndex, coord: index[firstPointIndex] }
     let currentPoint = firstPoint.coord
-    let previousAngle = 0
     const hull = [firstPoint.coord]
 
     // TODO why is step init to 2?
@@ -67,14 +74,14 @@ class Boundary {
     let step = 1
 
     // each index value can only be used once so this is ok
-    console.log(firstPoint)
+    // console.log(firstPoint)
     index.splice(firstPoint.i, 1)
 
-    while ((currentPoint !== firstPoint.coord || step === 2) && (index.length > 0)) {
+    while ((currentPoint !== firstPoint.coord || step === 1) && (index.length > 0)) {
       counter++
-      if (counter > 200) {
-        return hull
-      }
+       if (counter > 675) {
+         return hull
+       }
 
       if (step === 4) {
         index.push(firstPoint.coord)
@@ -82,20 +89,26 @@ class Boundary {
 
       // find nearest neighbors
       const kNearestPoints = this.nearestPoints(index, currentPoint, kk)
-      console.log(kNearestPoints)
 
       // TODO does this work as expected?
       let cPoints = this.subset(kNearestPoints)
-      cPoints = sortHeap(cPoints, kNearestPoints, 'dotpolar', [this.coords[currentPoint], this.minY.y], [this.coords[currentPoint], this.coords[currentPoint + 1]])
-      console.log(cPoints.slice())
+      this.ray = {
+        x0: this.coords[currentPoint],
+        y0: this.coords[currentPoint + 1],
+        x1: this.maxX.x + 10,
+        y1: this.coords[currentPoint + 1]
+      }
+      cPoints = sortHeap(this.coords, kNearestPoints, 'polar', [this.maxX.x + 10, this.coords[currentPoint + 1]], [this.coords[currentPoint], this.coords[currentPoint + 1]])
+//      console.log('cPoints', cPoints.slice(), kNearestPoints, this.subset(cPoints))
 
       let its = true
       let i = 0
+
       while (its && i < cPoints.length) {
-        // TODO quit early to check drawing
-        if (counter === 2) {
-          return hull.concat(cPoints)
-        }
+         // TODO quit early to check drawing
+         // if (counter === 1000) {
+         //   return hull
+         // }
 
         // what the hell is this
         let lastPoint = 0
@@ -103,7 +116,9 @@ class Boundary {
           lastPoint = 1
         }
 
-        let j = 2
+        // console.log(`last point ${lastPoint}`)
+
+        let j = 1
         its = false
         while (!its && j < hull.length - lastPoint) {
           const l = {
@@ -118,42 +133,46 @@ class Boundary {
             x1: this.coords[hull[step - j]],
             y1: this.coords[hull[step - j] + 1]
           }
-          console.log(l, p)
+          // console.log(l, p)
+          // console.log('hull', this.subset(hull))
           its = isFinite(intersect(p, l).x)
           j++
         }
-        if (its) {
-          return this.concave(index, ++kk)
-        }
-        // TODO not coord array anymore for currentPoint
-        currentPoint = cPoints[i]
-        hull.push(index[currentPoint])
-        previousAngle = dotProduct(
-          [this.coords[currentPoint], this.coords[currentPoint + 1]],
-          [this.coords[hull[hull.length - 2]], this.coords[hull[hull.length - 2] + 1]])
-        index.splice(index.indexOf(currentPoint), 1)
-        step++
         i++
       }
+      // console.log(its)
+      if (its) {
+        console.log('intersection found at k ', k, its)
+        return this.concave(oldIndex, ++kk)
+      }
+      currentPoint = cPoints[i]
+      hull.push(currentPoint)
+      // previousAngle = dotProduct(
+      //   [this.coords[currentPoint], this.coords[currentPoint + 1]],
+      //   [this.coords[hull[hull.length - 2]], this.coords[hull[hull.length - 2] + 1]])
+      index.splice(index.indexOf(currentPoint), 1)
+      step++
     }
     let allInside = true
-    let i = index.length
-    while (allInside && i > 0) {
+    for (const i of index) {
+      console.log(this.coords[i], this.coords[i + 1])
       allInside = this.pointInOrOut(
-        [this.coords[index[i]], this.coords[index[i] + 1]],
-        hull)
-      i--
+        [this.coords[i], this.coords[i + 1]],
+        hull, this.maxX.x + 10)
+      if (!allInside) {
+        break
+      }
     }
     if (!allInside) {
       console.log('Another time round')
-      return this.concave(index, ++kk)
+      return this.concave(oldIndex, ++kk)
     }
     console.log('made it out')
     return hull
   }
 
   nearestPoints (index, cP, kk) {
-    console.log(cP)
+    // console.log(cP)
     // console.log([this.coords[cP], this.coords[cP + 1]])
     index = sortHeap(this.coords.slice(), index.slice(), 'dist', [this.coords[cP], this.coords[cP + 1]])
     // console.log(index)
@@ -228,10 +247,10 @@ class Boundary {
     return p
   }
 
-  pointInOrOut (point, index) {
+  pointInOrOut (point, index, dir) {
     // assume ray going to + infinity on x plane here just making assumption that it extends 1000 units past whatever the minimum x value is in the boundary
     const p = {
-      x0: point[0], y0: point[1], x1: this.minX.x - 1000, y1: point[1]
+      x0: point[0], y0: point[1], x1: dir, y1: point[1]
     }
     this.ray = p
     // console.log(this.ray)
@@ -256,6 +275,14 @@ class Boundary {
     }
     console.log(windingNum !== 0)
     return Math.abs(windingNum) !== 0
+  }
+
+  printPoints (xIndex) {
+    const p = []
+    for (const i of xIndex) {
+      p.push(this.coords[i], this.coords[i + 1])
+    }
+    console.log(p)
   }
 
   subset (indices) {
@@ -345,6 +372,33 @@ function sortHeap (arr, index, criteria, minPoint, centerPoint) {
   heapSort(minPoint, index, arr, index.length, criteria, centerPoint)
 
   return index
+}
+
+function maximumPointX (newArr, index) {
+  let ind = 0
+  let minY = -Infinity
+  let minX = -Infinity
+  if (index) {
+    for (const [k, p] of index.entries()) {
+      if (newArr[p] > minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      } else if (newArr[p + 1] >= minY && newArr[p] >= minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      }
+    }
+  } else {
+    for (let p = 0; p > newArr.length; p++) {
+      if (newArr[p] > minX) {
+        minX = newArr[p]
+        ind = p
+      }
+    }
+  }
+  return { x: minX, y: minY, i: ind }
 }
 
 function minimumPointY (newArr, index) {

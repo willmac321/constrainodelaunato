@@ -121,7 +121,6 @@ export function heapSort (minpoint, index, a, count, p, center) {
     end--
     siftDown(minpoint, a, index, 0, end, func, p)
   }
-
 //  for (const i of index) {
 //    console.log(i, a[i], a[i + 1], func([a[i], a[i + 1]], minpoint))
 //  }
