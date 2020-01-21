@@ -1,5 +1,5 @@
 import Delaunator from 'delaunator'
-import { heapSort, intersect, dotProduct } from './helpers'
+import { heapSort, intersect, intersectAlt, slope } from './helpers'
 
 // const test = [10, 6, 3, 4, 7, 1, 2, 5]
 
@@ -14,6 +14,7 @@ class Boundary {
     this.minY = minimumPointY(this.coords, this.index)
     this.minX = minimumPointX(this.coords, this.index)
     this.maxX = maximumPointX(this.coords, this.index)
+    this.baseK = null
 
     this.ray = null
     this.hull = []
@@ -35,7 +36,10 @@ class Boundary {
     // alt index is sorted to minX value
     this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y], [this.minY.x, this.minY.y])
     // this.index = index
+    this.baseK = 3
     this.index = this.concave(this.index.slice(), k)
+    // this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y], [this.minY.x, this.minY.y])
+    // this.index = this.concave(this.index.slice(), k)
     // this.index = this.index.filter((i) => i !== undefined)
     console.log(this.index)
     // this.sortHeapAndClean(this.coords, this.index, 'polar', [this.center.x, this.center.y])
@@ -47,7 +51,7 @@ class Boundary {
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
-    const stopVal = Infinity
+    const stopVal = 98 // Infinity
     const oldIndex = index.slice()
     console.log('new k', k)
     if (index.length < 3) {
@@ -121,14 +125,11 @@ class Boundary {
             x1: this.coords[hull[step - j]],
             y1: this.coords[hull[step - j] + 1]
           }
-          // console.log(l, p)
-          // console.log('hull', this.subset(hull))
-          its = isFinite(intersect(p, l).x)
+          its = isFinite(intersect(p, l, false).x)
           j++
         }
         i++
       }
-      // console.log(its)
       if (its) {
         console.log('intersection found at k ', k, its)
         return this.concave(oldIndex, ++kk)
@@ -136,17 +137,13 @@ class Boundary {
       currentPoint = cPoints[i]
       hull.push(currentPoint)
       if (counter > stopVal) {
-        return hull
+        return hull.concat(cPoints)
       }
-      // previousAngle = dotProduct(
-      //   [this.coords[currentPoint], this.coords[currentPoint + 1]],
-      //   [this.coords[hull[hull.length - 2]], this.coords[hull[hull.length - 2] + 1]])
       index.splice(index.indexOf(currentPoint), 1)
       step++
     }
     let allInside = true
     for (const i of index) {
-      console.log(this.coords[i], this.coords[i + 1])
       allInside = this.pointInOrOut(
         [this.coords[i], this.coords[i + 1]],
         hull, this.maxX.x + 10)
@@ -156,7 +153,6 @@ class Boundary {
     }
     if (!allInside) {
       console.log('Another time round')
-      return hull
       return this.concave(oldIndex, ++kk)
     }
     console.log('made it out')
@@ -164,8 +160,6 @@ class Boundary {
   }
 
   sortByAngle (kNearestPoints, currentPoint, lastPoint) {
-    // TODO does this work as expected?
-
     if (!lastPoint || lastPoint === currentPoint) {
       lastPoint = [this.maxX.x + 10, this.coords[currentPoint + 1]]
     } else {
@@ -177,9 +171,25 @@ class Boundary {
       x1: this.coords[currentPoint],
       y1: this.coords[currentPoint + 1]
     }
+    const currentPointArr = [this.coords[currentPoint], this.coords[currentPoint + 1]]
 
     // cant use max or min value for first point, the reference point needs to be the last point in the hull in order to get the angle sorting right
-    return sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, [this.coords[currentPoint], this.coords[currentPoint + 1]])
+    const rv = sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr).slice()
+    // if two points are on the same line eq as current point, currently the further one is considered a 'closer angle', perform swap of these coords below
+    console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`)
+
+    for (let k = 0; k < rv.length; k++) {
+      let lastPoint = [this.coords[rv[k - 1]], this.coords[rv[k - 1] + 1]]
+      if (k === 0) {
+        lastPoint = currentPointArr
+      }
+      const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]]
+      console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
+    //  if (slope(currentPointArr, newPoint) === currentPointSlope) {
+    //  }
+    }
+
+    return rv // sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr )
   }
 
   nearestPoints (index, cP, kk) {

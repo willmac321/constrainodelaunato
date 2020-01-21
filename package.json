@@ -2,7 +2,7 @@
   "name": "constrainodelaunato",
   "version": "1.0.0",
   "description": "Constrained Delaunay triangulator build off of the delaunator package.",
-  "main": "constrainMe.js",
+  "main": "constrainment.js",
   "module": "main.js",
   "jsdelivr": "constrainodelaunato.min.js",
   "unpkg": "constrainodelaunato.min.js",
@@ -41,7 +41,7 @@
     "dev": "browser-sync start --server --files './*.js' './main.html' --index \"main.html\""
   },
   "files": [
-    "constrainMe.js",
+    "constrainment.js",
     "constrainodelaunato.js",
     "constrainodelaunato.min.js"
   ],

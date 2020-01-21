@@ -15,6 +15,22 @@ function builtInSort (point, arr) {
 
 /* eslint-enable */
 
+export function intersectAlt (p, l) {
+  // http://bl.ocks.org/nitaku/fdbb70c3baa36e8feb4e
+  const s1_x = p.x1 - p.x0
+  const s1_y = p.y1 - p.y0
+  const s2_x = l.x1 - l.x0
+  const s2_y = l.y1 - l.y0
+
+  const s = (-s1_y * (p.x0 - l.x0) + s1_x * (p.y0 - l.y0)) / (-s2_x * s1_y + s1_x * s2_y)
+  const t = (s2_x * (p.y0 - l.y0) - s2_y * (p.x0 - l.x0)) / (-s2_x * s1_y + s1_x * s2_y)
+
+  if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+    return { x: p.x0 + (t * s1_x), y: p.y0 + (t * s1_y) }
+  }
+  return { x: Infinity, y: Infinity }
+}
+
 /***
  * intersect compares two lines, does not include endpoints!
  * @param p is a line segment of type {x0, y0, x1, y1}
@@ -64,6 +80,12 @@ export function dotProduct (a, b) {
   return p.x * o.x + p.y * o.y
 }
 
+export function slope (a, b) {
+  const p = { x: a[0], y: a[1] }
+  const o = { x: b[0], y: b[1] }
+  return (p.y - o.y) / (p.x - o.x)
+}
+
 function compareIntersect (a, b) {
   const t = { a: false, b: false }
   if (a > 0 && a < 1) {
@@ -77,10 +99,10 @@ function compareIntersect (a, b) {
 
 function compareIntersectEndpoints (a, b) {
   const t = { a: false, b: false }
-  if (a >= 0 && a < 1) {
+  if (a >= 0 && a <= 1) {
     t.a = true
   }
-  if (b >= 0 && b < 1) {
+  if (b >= 0 && b <= 1) {
     t.b = true
   }
   return t

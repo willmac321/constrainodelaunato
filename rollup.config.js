@@ -3,7 +3,7 @@ import buble from 'rollup-plugin-buble';
 import resolve from '@rollup/plugin-node-resolve';
 
 const config = (file, plugins) => ({
-    input: 'constrainMe.js',
+    input: 'constrainment.js',
     output: {
         name: 'ConstrainoDelaunato',
         format: 'umd',
