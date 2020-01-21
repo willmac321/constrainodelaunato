@@ -685,12 +685,10 @@
       a[j] = t;
     }
 
-    // const test = [10, 6, 3, 4, 7, 1, 2, 5]
-
     var counter = 0;
 
     class Boundary {
-      constructor (arr) {
+      constructor (arr, k = 3) {
         this.coords = arr.slice();
         this.index = [...this.coords.keys()].filter((i) => i % 2 === 0);
         this.index = this.clean(this.index);
@@ -698,14 +696,14 @@
         this.minY = minimumPointY(this.coords, this.index);
         this.minX = minimumPointX(this.coords, this.index);
         this.maxX = maximumPointX(this.coords, this.index);
-        this.baseK = null;
 
         this.ray = null;
-        this.hull = [];
+        this.hull = this.findConcaveHull(k);
+        this.index = this.hull;
 
         // center of test from html is not inside boundary
         // this point is though
-        this.testFunctions();
+        //this.testFunctions()
       }
 
       testFunctions () {
@@ -713,20 +711,19 @@
         this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index, this.minX.x - 10);
         // console.log(this.pointInOrOut([180, 100], this.index))
         this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.minX.x, this.minY.y]);
-        this.findHull(3);
+        //this.findHull(3)
       }
 
-      findHull (k) {
+      findConcaveHull (k) {
         // alt index is sorted to minX value
         this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y], [this.minY.x, this.minY.y]);
         // this.index = index
-        this.baseK = 3;
-        this.index = this.concave(this.index.slice(), k);
+        this.hull = this.concave(this.index.slice(), k);
+        // this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.center.x, this.center.y])
         // this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y], [this.minY.x, this.minY.y])
-        // this.index = this.concave(this.index.slice(), k)
+        // this.index = this.concave(this.index.slice(0, this.index.length - 1), k)
         // this.index = this.index.filter((i) => i !== undefined)
-        console.log(this.index);
-        // this.sortHeapAndClean(this.coords, this.index, 'polar', [this.center.x, this.center.y])
+        return this.hull
       }
 
       concave (index, k) {
@@ -735,7 +732,7 @@
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
-        const stopVal = 98; // Infinity
+        const stopVal = Infinity; // and beyond
         const oldIndex = index.slice();
         console.log('new k', k);
         if (index.length < 3) {
@@ -757,43 +754,28 @@
         const firstPoint = { i: firstPointIndex, coord: index[firstPointIndex] };
         let currentPoint = firstPoint.coord;
         const hull = [firstPoint.coord];
-
         // TODO why is step init to 2?
         // Because the paper was written in Matlab....
         let step = 1;
-
         // each index value can only be used once so this is ok
-        // console.log(firstPoint)
         index.splice(firstPoint.i, 1);
-
         while ((currentPoint !== firstPoint.coord || step === 1) && (index.length > 0)) {
           counter++;
           if (step === 4) {
             index.push(firstPoint.coord);
           }
-
           // find nearest neighbors
           const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
-
           // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
           const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
-          // console.log('cPoints', cPoints.slice(), kNearestPoints, this.subset(cPoints))
-
           let its = true;
           let i = -1;
-          // console.log('here', cPoints[i + 1], firstPoint)
-
           while (its && i < cPoints.length - 1) {
-            // TODO quit early to check drawing
-
             // This is so that when the first point is added to the end of the hull, it doesn't get used to check for intersections
             let lastPoint = 0;
             if (cPoints[i] === firstPoint.coord) {
               lastPoint = 1;
             }
-
-            // console.log(`last point ${lastPoint}`)
-
             let j = 1;
             its = false;
             while (!its && j < hull.length - lastPoint) {
@@ -821,7 +803,7 @@
           currentPoint = cPoints[i];
           hull.push(currentPoint);
           if (counter > stopVal) {
-            return hull.concat(cPoints)
+            return hull//.concat(cPoints)
           }
           index.splice(index.indexOf(currentPoint), 1);
           step++;
@@ -856,13 +838,12 @@
           y1: this.coords[currentPoint + 1]
         };
         const currentPointArr = [this.coords[currentPoint], this.coords[currentPoint + 1]];
-
         // cant use max or min value for first point, the reference point needs to be the last point in the hull in order to get the angle sorting right
         const rv = sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr).slice();
         // if two points are on the same line eq as current point, currently the further one is considered a 'closer angle', perform swap of these coords below
         console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`);
 
-        let lastSlope = undefined;
+        let lastSlope;
 
         for (let k = 0; k < rv.length; k++) {
           let lastPoint = [this.coords[rv[k - 1]], this.coords[rv[k - 1] + 1]];
@@ -873,10 +854,12 @@
 
           console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`);
           if (lastSlope && slope(lastPoint, newPoint) === lastSlope) {
-            //flipflop the two point in array order if the slopes are the same 
-            swap$1 (rv, k, k - 1);
+            lastSlope = slope(lastPoint, newPoint);
+            // flipflop the two points in array order if the slopes are the same
+            swap$1(rv, k, k - 1);
+          } else {
+            lastSlope = slope(lastPoint, newPoint);
           }
-          lastSlope = slope(lastPoint, newPoint);
         }
 
         return rv // sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr )
