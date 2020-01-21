@@ -16,11 +16,13 @@ function builtInSort (point, arr) {
 /* eslint-enable */
 
 /***
+ * intersect compares two lines, does not include endpoints!
  * @param p is a line segment of type {x0, y0, x1, y1}
  * @param l is a line segment of type {x0, y0, x1, y1}
+ * @param checkEndpoints bool - True to include endpoints in intersection calc
  * @return {x, y} at intersect, if they dont intersect, they intersect at infinity
  ***/
-export function intersect (p, l) {
+export function intersect (p, l, checkEndpoints = false) {
   // compare two line segments to see if they intersect
   const den = ((l.y1 - l.y0) * (p.x1 - p.x0)) - ((l.x1 - l.x0) * (p.y1 - p.y0))
   if (den === 0) {
@@ -41,18 +43,15 @@ export function intersect (p, l) {
     y: p.y0 + (a * (p.y1 - p.y0))
   }
 
-  const t = { a: false, b: false }
-
   // if (p.y1 === rv.y) {
   // console.log(a, b);
   // }
   //
-  if (a >= 0 && a < 1) {
-    t.a = true
+  let t = compareIntersect(a, b)
+  if (checkEndpoints) {
+    t = compareIntersectEndpoints(a, b)
   }
-  if (b >= 0 && b < 1) {
-    t.b = true
-  }
+
   if (t.a && t.b) {
     return rv
   }
@@ -63,6 +62,28 @@ export function dotProduct (a, b) {
   const p = { x: a[0], y: a[1] }
   const o = { x: b[0], y: b[1] }
   return p.x * o.x + p.y * o.y
+}
+
+function compareIntersect (a, b) {
+  const t = { a: false, b: false }
+  if (a > 0 && a < 1) {
+    t.a = true
+  }
+  if (b > 0 && b < 1) {
+    t.b = true
+  }
+  return t
+}
+
+function compareIntersectEndpoints (a, b) {
+  const t = { a: false, b: false }
+  if (a >= 0 && a < 1) {
+    t.a = true
+  }
+  if (b >= 0 && b < 1) {
+    t.b = true
+  }
+  return t
 }
 
 function dotPolar (a, b) {

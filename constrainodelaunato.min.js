@@ -504,11 +504,13 @@
     /* eslint-enable */
 
     /***
+     * intersect compares two lines, does not include endpoints!
      * @param p is a line segment of type {x0, y0, x1, y1}
      * @param l is a line segment of type {x0, y0, x1, y1}
+     * @param checkEndpoints bool - True to include endpoints in intersection calc
      * @return {x, y} at intersect, if they dont intersect, they intersect at infinity
      ***/
-    function intersect (p, l) {
+    function intersect (p, l, checkEndpoints = false) {
       // compare two line segments to see if they intersect
       const den = ((l.y1 - l.y0) * (p.x1 - p.x0)) - ((l.x1 - l.x0) * (p.y1 - p.y0));
       if (den === 0) {
@@ -529,18 +531,15 @@
         y: p.y0 + (a * (p.y1 - p.y0))
       };
 
-      const t = { a: false, b: false };
-
       // if (p.y1 === rv.y) {
       // console.log(a, b);
       // }
       //
-      if (a >= 0 && a < 1) {
-        t.a = true;
+      let t = compareIntersect(a, b);
+      if (checkEndpoints) {
+        t = compareIntersectEndpoints(a, b);
       }
-      if (b >= 0 && b < 1) {
-        t.b = true;
-      }
+
       if (t.a && t.b) {
         return rv
       }
@@ -551,6 +550,28 @@
       const p = { x: a[0], y: a[1] };
       const o = { x: b[0], y: b[1] };
       return p.x * o.x + p.y * o.y
+    }
+
+    function compareIntersect (a, b) {
+      const t = { a: false, b: false };
+      if (a > 0 && a < 1) {
+        t.a = true;
+      }
+      if (b > 0 && b < 1) {
+        t.b = true;
+      }
+      return t
+    }
+
+    function compareIntersectEndpoints (a, b) {
+      const t = { a: false, b: false };
+      if (a >= 0 && a < 1) {
+        t.a = true;
+      }
+      if (b >= 0 && b < 1) {
+        t.b = true;
+      }
+      return t
     }
 
     function dotPolar (a, b) {
@@ -706,12 +727,13 @@
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
+        const stopVal = Infinity;
         const oldIndex = index.slice();
         console.log('new k', k);
         if (index.length < 3) {
           console.log('len less than 3');
           return null
-        } else if (k > 20) {//index.length / 2) {
+        } else if (k > index.length - 1) {
           console.log(counter);
           console.log('k is too big');
           return null
@@ -738,10 +760,6 @@
 
         while ((currentPoint !== firstPoint.coord || step === 1) && (index.length > 0)) {
           counter++;
-           if (counter > 675) {
-             return hull
-           }
-
           if (step === 4) {
             index.push(firstPoint.coord);
           }
@@ -749,27 +767,18 @@
           // find nearest neighbors
           const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
 
-          // TODO does this work as expected?
-          let cPoints = this.subset(kNearestPoints);
-          this.ray = {
-            x0: this.coords[currentPoint],
-            y0: this.coords[currentPoint + 1],
-            x1: this.maxX.x + 10,
-            y1: this.coords[currentPoint + 1]
-          };
-          cPoints = sortHeap(this.coords, kNearestPoints, 'polar', [this.maxX.x + 10, this.coords[currentPoint + 1]], [this.coords[currentPoint], this.coords[currentPoint + 1]]);
-    //      console.log('cPoints', cPoints.slice(), kNearestPoints, this.subset(cPoints))
+          // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
+          const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
+          // console.log('cPoints', cPoints.slice(), kNearestPoints, this.subset(cPoints))
 
           let its = true;
-          let i = 0;
+          let i = -1;
+          // console.log('here', cPoints[i + 1], firstPoint)
 
-          while (its && i < cPoints.length) {
-             // TODO quit early to check drawing
-             // if (counter === 1000) {
-             //   return hull
-             // }
+          while (its && i < cPoints.length - 1) {
+            // TODO quit early to check drawing
 
-            // what the hell is this
+            // This is so that when the first point is added to the end of the hull, it doesn't get used to check for intersections
             let lastPoint = 0;
             if (cPoints[i] === firstPoint.coord) {
               lastPoint = 1;
@@ -783,8 +792,8 @@
               const l = {
                 x0: this.coords[hull[step - 1]],
                 y0: this.coords[hull[step - 1] + 1],
-                x1: this.coords[cPoints[i]],
-                y1: this.coords[cPoints[i] + 1]
+                x1: this.coords[cPoints[i + 1]],
+                y1: this.coords[cPoints[i + 1] + 1]
               };
               const p = {
                 x0: this.coords[hull[step - 1 - j]],
@@ -806,6 +815,9 @@
           }
           currentPoint = cPoints[i];
           hull.push(currentPoint);
+          if (counter > stopVal) {
+            return hull
+          }
           // previousAngle = dotProduct(
           //   [this.coords[currentPoint], this.coords[currentPoint + 1]],
           //   [this.coords[hull[hull.length - 2]], this.coords[hull[hull.length - 2] + 1]])
@@ -824,10 +836,29 @@
         }
         if (!allInside) {
           console.log('Another time round');
-          return this.concave(oldIndex, ++kk)
+          return hull
         }
         console.log('made it out');
         return hull
+      }
+
+      sortByAngle (kNearestPoints, currentPoint, lastPoint) {
+        // TODO does this work as expected?
+
+        if (!lastPoint || lastPoint === currentPoint) {
+          lastPoint = [this.maxX.x + 10, this.coords[currentPoint + 1]];
+        } else {
+          lastPoint = [this.coords[lastPoint], this.coords[lastPoint + 1]];
+        }
+        this.ray = {
+          x0: lastPoint[0],
+          y0: lastPoint[1],
+          x1: this.coords[currentPoint],
+          y1: this.coords[currentPoint + 1]
+        };
+
+        // cant use max or min value for first point, the reference point needs to be the last point in the hull in order to get the angle sorting right
+        return sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, [this.coords[currentPoint], this.coords[currentPoint + 1]])
       }
 
       nearestPoints (index, cP, kk) {
@@ -923,7 +954,7 @@
             x1: this.coords[index[(i + 1) > index.length - 1 ? 0 : i + 1]],
             y1: this.coords[index[(i + 1) > index.length - 1 ? 0 : i + 1] + 1]
           };
-          const inters = intersect(p, l);
+          const inters = intersect(p, l, true);
           if (isFinite(inters.x)) {
             if (l.y1 - l.y0 > 0) {
               windingNum++;

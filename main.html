@@ -184,14 +184,6 @@ function draw() {
     ctx.rect(padding + ratio * (b.minY.x - minX) - 3, padding + ratio * (b.minY.y - minY) - 3, 10, 10);
     ctx.fill();
 
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.rect(padding + ratio * (b.ray.x0 - minX) - 3, padding + ratio * (b.ray.y0 - minY) - 3, 6, 6);
-	ctx.moveTo(padding + ratio * (b.ray.x0 - minX), padding + ratio * (b.ray.y0 - minY));
-	ctx.lineTo(padding + ratio * (b.ray.x1 - minX), padding + ratio * (b.ray.y1 - minY));
-    ctx.fill();
-	ctx.strokeStyle = 'red';
-	ctx.stroke();
 
 	var bound = delaunay.bound;
 
@@ -211,7 +203,7 @@ function draw() {
 		ctx.moveTo(oldpoint.x, oldpoint.y);
         ctx.lineTo(newpoint.x, newpoint.y);
 		ctx.closePath();
-		ctx.lineWidth = 2;
+		ctx.lineWidth = 3;
 		ctx.strokeStyle = 'blue';
 		ctx.stroke();
 	}
@@ -236,6 +228,16 @@ function draw() {
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'black';
     ctx.stroke();
+
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.rect(padding + ratio * (b.ray.x0 - minX) - 3, padding + ratio * (b.ray.y0 - minY) - 3, 6, 6);
+	ctx.moveTo(padding + ratio * (b.ray.x0 - minX), padding + ratio * (b.ray.y0 - minY));
+	ctx.lineTo(padding + ratio * (b.ray.x1 - minX), padding + ratio * (b.ray.y1 - minY));
+    ctx.fill();
+	ctx.strokeStyle = 'red';
+    ctx.lineWidth = 3;
+	ctx.stroke();
 
 
 }
