@@ -794,6 +794,7 @@
               its = isFinite(intersect(p, l, false).x);
               j++;
             }
+            //TODO add if all points intersect, pop point and go back to point before recursion?
             i++;
           }
           if (its) {
@@ -841,9 +842,10 @@
         // cant use max or min value for first point, the reference point needs to be the last point in the hull in order to get the angle sorting right
         const rv = sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr).slice();
         // if two points are on the same line eq as current point, currently the further one is considered a 'closer angle', perform swap of these coords below
-        console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`);
+    //    console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`)
 
         let lastSlope;
+        let lastDot;
 
         for (let k = 0; k < rv.length; k++) {
           let lastPoint = [this.coords[rv[k - 1]], this.coords[rv[k - 1] + 1]];
@@ -852,14 +854,20 @@
           }
           const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]];
 
-          console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`);
+    //      console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
+    //      console.log(`dotproduct last point ${lastDot} new point ${dotProduct(lastPoint, newPoint)}`)
+
           if (lastSlope && slope(lastPoint, newPoint) === lastSlope) {
             lastSlope = slope(lastPoint, newPoint);
+            lastDot = dotProduct(lastPoint, newPoint);
             // flipflop the two points in array order if the slopes are the same
             swap$1(rv, k, k - 1);
           } else {
             lastSlope = slope(lastPoint, newPoint);
+            lastDot = dotProduct(lastPoint, newPoint);
           }
+
+          
         }
 
         return rv // sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr )
