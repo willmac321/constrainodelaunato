@@ -18,7 +18,7 @@ export default class Boundary {
 
     // center of test from html is not inside boundary
     // this point is though
-    //this.testFunctions()
+    // this.testFunctions()
   }
 
   testFunctions () {
@@ -26,18 +26,13 @@ export default class Boundary {
     this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index, this.minX.x - 10)
     // console.log(this.pointInOrOut([180, 100], this.index))
     this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.minX.x, this.minY.y])
-    //this.findHull(3)
+    // this.findHull(3)
   }
 
   findConcaveHull (k) {
     // alt index is sorted to minX value
-    this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y], [this.minY.x, this.minY.y])
-    // this.index = index
+    this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
     this.hull = this.concave(this.index.slice(), k)
-    // this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.center.x, this.center.y])
-    // this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minX.y], [this.minY.x, this.minY.y])
-    // this.index = this.concave(this.index.slice(0, this.index.length - 1), k)
-    // this.index = this.index.filter((i) => i !== undefined)
     return this.hull
   }
 
@@ -47,7 +42,7 @@ export default class Boundary {
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
-    const stopVal = Infinity // and beyond
+    const stopVal = 76 // Infinity // and beyond
     const oldIndex = index.slice()
     console.log('new k', k)
     if (index.length < 3) {
@@ -69,7 +64,7 @@ export default class Boundary {
     const firstPoint = { i: firstPointIndex, coord: index[firstPointIndex] }
     let currentPoint = firstPoint.coord
     const hull = [firstPoint.coord]
-    // TODO why is step init to 2?
+    // why is step init to 2?
     // Because the paper was written in Matlab....
     let step = 1
     // each index value can only be used once so this is ok
@@ -109,7 +104,7 @@ export default class Boundary {
           its = isFinite(intersect(p, l, false).x)
           j++
         }
-        //TODO add if all points intersect, pop point and go back to point before recursion?
+        // TODO add if all points intersect, pop point and go back to point before recursion?
         i++
       }
       if (its) {
@@ -119,7 +114,7 @@ export default class Boundary {
       currentPoint = cPoints[i]
       hull.push(currentPoint)
       if (counter > stopVal) {
-        return hull//.concat(cPoints)
+        return hull// .concat(cPoints)
       }
       index.splice(index.indexOf(currentPoint), 1)
       step++
@@ -157,32 +152,26 @@ export default class Boundary {
     // cant use max or min value for first point, the reference point needs to be the last point in the hull in order to get the angle sorting right
     const rv = sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr).slice()
     // if two points are on the same line eq as current point, currently the further one is considered a 'closer angle', perform swap of these coords below
-//    console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`)
+    //    console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`)
 
-    let lastSlope
-    let lastDot
-
+    let lastSlope = slope(lastPoint, currentPointArr)
+    // if two points relative to each other are in line
+    // Issue here when 3 points line up and one is segment from origin
     for (let k = 0; k < rv.length; k++) {
       let lastPoint = [this.coords[rv[k - 1]], this.coords[rv[k - 1] + 1]]
       if (k === 0) {
         lastPoint = currentPointArr
       }
       const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]]
-
-//      console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
-//      console.log(`dotproduct last point ${lastDot} new point ${dotProduct(lastPoint, newPoint)}`)
-
-      if (lastSlope && slope(lastPoint, newPoint) === lastSlope) {
-        lastSlope = slope(lastPoint, newPoint)
-        lastDot = dotProduct(lastPoint, newPoint)
+      const newSlope = slope(lastPoint, newPoint)
+            console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
+    //        console.log(`new point ${dotProduct(lastPoint, newPoint)}`)
+      if (lastSlope && (newSlope === lastSlope || -newSlope === lastSlope)) {
         // flipflop the two points in array order if the slopes are the same
+        // sort by euclid instead of straight swap
         swap(rv, k, k - 1)
-      } else {
-        lastSlope = slope(lastPoint, newPoint)
-        lastDot = dotProduct(lastPoint, newPoint)
       }
-
-      
+      lastSlope = slope(lastPoint, newPoint)
     }
 
     return rv // sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr )

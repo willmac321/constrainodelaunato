@@ -108,11 +108,20 @@ function compareIntersectEndpoints (a, b) {
   return t
 }
 
+function polarAngle (a, b) {
+  const o = { x: a[0] - c.x, y: a[1] - c.y }
+  const p = { x: b[0] - c.x, y: b[1] - c.y }
+  let theta = (Math.atan2(p.y, p.x) - (Math.atan2(o.y, o.x)) * 180 / Math.PI) % 360
+  theta = isNaN(theta) ? 0 : theta
+  theta = theta > 0 ? theta : 360 + theta
+  return theta
+}
+
 function dotPolar (a, b) {
   // b is basis point
   // put those bad boys in order ccw around some centroid point that globally declared
-  const o = { x: c.x - a[0], y: c.y - a[1] }
-  const p = { x: c.x - b[0], y: c.y - b[1] }
+  const o = { x: a[0] - c.x, y: a[1] - c.y }
+  const p = { x: b[0] - c.x, y: b[1] - c.y }
   const magO = Math.sqrt(Math.pow(o.x, 2) + Math.pow(o.y, 2))
   const magP = Math.sqrt(Math.pow(p.x, 2) + Math.pow(p.y, 2))
   let theta = Math.acos((p.x * o.x + p.y * o.y) / (magO * magP)) * 180 / Math.PI
@@ -165,9 +174,8 @@ export function heapSort (minpoint, index, a, count, p, center) {
     siftDown(minpoint, a, index, 0, end, func, p)
   }
 //  for (const i of index) {
-//    console.log(i, a[i], a[i + 1], func([a[i], a[i + 1]], minpoint))
+//    console.log(i, a[i], a[i + 1], func([a[i], a[i + 1]], minpoint), minpoint)
 //  }
-//  console.log(minpoint)
 }
 
 function heapify (point, a, index, count, func, p) {

@@ -5,4 +5,5 @@ node_modules/
 .env.test
 *.swo
 *.swp
+.vimrc*
 package-lock.json
