@@ -13,7 +13,7 @@ export default class Boundary {
     this.minX = minimumPointX(this.coords, this.index)
     this.maxX = maximumPointX(this.coords, this.index)
 
-    // TODO remove this
+    // Library of most recently used points for k boundary consideration
     this.cPoints = []
 
     this.ray = null
@@ -40,7 +40,7 @@ export default class Boundary {
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
-    const stopVal = Infinity // 76 // Infinity // and beyond
+    const stopVal = 500 // Infinity // 76 // Infinity // and beyond
     const oldIndex = index.slice()
     console.log('new k', k)
     if (index.length < 3) {
@@ -68,81 +68,95 @@ export default class Boundary {
     // each index value can only be used once so this is ok
     index.splice(firstPoint.i, 1)
     while ((currentPoint !== firstPoint.coord || step === 1) && (index.length > 0)) {
-      counter++
+      let oldcPoints
+      let oldI
+      let cPoints
+      let kkk = kk
+      let keepDecreasingK = true
+      let its = true
+      let i = 0
       if (step === 4) {
         index.push(firstPoint.coord)
       }
-      // find nearest neighbors
-      const kNearestPoints = this.nearestPoints(index, currentPoint, kk)
-      // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
-      const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2])
-      if (cPoints.indexOf(firstPoint.coord) > -1) {
-        console.log(cPoints)
-      }
-      let its = true
-      let i = -1
-      while (its && i < cPoints.length - 1) {
+      counter++
+      while (keepDecreasingK && kkk >= 3) {
+        console.log(kkk)
+        i = 0
+        // find nearest neighbors
+        const kNearestPoints = this.nearestPoints(index, currentPoint, kkk)
+        // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
+        cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2])
+        while (its && i < cPoints.length - 1) {
         // This is so that when the first point is added to the end of the hull, it doesn't get used to check for intersections
-        let lastPoint = 0
-        if (cPoints[i] === firstPoint.coord) {
-          console.log('back to first', firstPoint)
-          lastPoint = 1
+          let lastPoint = 0
+          if (cPoints[i] === firstPoint.coord) {
+            console.log('back to first', firstPoint)
+            lastPoint = 1
+          }
+          let j = 1
+          its = false
+          while (!its && j < hull.length - lastPoint) {
+            const l = {
+              x0: this.coords[hull[step - 1]],
+              y0: this.coords[hull[step - 1] + 1],
+              x1: this.coords[cPoints[i]],
+              y1: this.coords[cPoints[i] + 1]
+            }
+            const p = {
+              x0: this.coords[hull[step - j]],
+              y0: this.coords[hull[step - j] + 1],
+              x1: this.coords[hull[step - 1 - j]],
+              y1: this.coords[hull[step - 1 - j] + 1]
+            }
+            // the endpoint of one line segment is always intersecting the endpoint of a connected line segment, how to ignore this intersection?
+            const ints = intersect(p, l, true)
+            const endpointsMatch = (p.x0 === l.x0 && p.y0 === l.y0)
+            const isClose = (cPoints[i] === firstPoint.coord) && (p.x1 === l.x1 && p.y1 === l.y1)
+            // if (l.x0 === 221 && l.y0 === 90) {
+            //   console.log(l, p, ints, isFinite(ints.x), (p.x1 === l.x0 && p.y1 === l.y0))
+            // }
+            // do the lines intersect, true if do
+            if (isFinite(ints.x) && !endpointsMatch && !isClose) {
+              its = true
+            }
+            j++
+          }
+          i++
         }
-        let j = 1
+        if (its) {
+          // if intersection found
+          keepDecreasingK = false
+        }
+        oldcPoints = cPoints.slice()
+        oldI = i
+        kkk--
+      }
+      if (oldcPoints && keepDecreasingK) {
+        cPoints = oldcPoints
+        i = oldI
         its = false
-        while (!its && j < hull.length - lastPoint) {
-          const l = {
-            x0: this.coords[hull[step - 1]],
-            y0: this.coords[hull[step - 1] + 1],
-            x1: this.coords[cPoints[i + 1]],
-            y1: this.coords[cPoints[i + 1] + 1]
-          }
-          const p = {
-            x0: this.coords[hull[step - j]],
-            y0: this.coords[hull[step - j] + 1],
-            x1: this.coords[hull[step - 1 - j]],
-            y1: this.coords[hull[step - 1 - j] + 1]
-          }
-          // the endpoint of one line segment is always intersecting the endpoint of a connected line segment, how to ignore this intersection?
-          const ints = intersect(p, l, true)
-          const endpointsMatch = (p.x0 === l.x0 && p.y0 === l.y0)
-          const isClose = (cPoints[i + 1] === firstPoint.coord) && (p.x1 === l.x1 && p.y1 === l.y1)
-          // (p.x0 !== l.x0 && p.y0 !== l.y0) ||
-          // if (l.x0 === 221 && l.y0 === 90) {
-          //   console.log(l, p, ints, isFinite(ints.x), (p.x1 === l.x0 && p.y1 === l.y0))
-          // }
-          if (isFinite(ints.x) && !endpointsMatch && !isClose) {
-            its = true
-          }
-          // if (counter > 269) {
-          //   console.log(l, p, ints, isFinite(ints.x), !endpointsMatch, cPoints[i + 1], firstPoint)
-          //   console.log(its)
-          // }
-          j++
-        }
-        i++
       }
       this.cPoints = cPoints.slice()
       // this.cPoints.splice(i, 1)
 
+      console.log(this.subset(cPoints), i)
+
       if (its) {
         console.log('intersection found at k ', k, its)
-        // if (kk + 1 === 12) {
-        //   console.log(counter)
-        //   return hull
-        // }
         return this.concave(oldIndex, ++kk)
       }
       currentPoint = cPoints[i]
       hull.push(currentPoint)
 
       if (counter > stopVal) {
-        console.log('test', [this.coords[currentPoint], this.coords[currentPoint + 1]], this.subset(cPoints))
+        this.cPoints = cPoints
+        console.log('reached stop criteria', [this.coords[currentPoint], this.coords[currentPoint + 1]], this.subset(cPoints))
         return hull // .concat(cPoints)
       }
       index.splice(index.indexOf(currentPoint), 1)
       step++
     }
+
     let allInside = true
     for (const i of index) {
       allInside = this.pointInOrOut(
