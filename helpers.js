@@ -13,9 +13,7 @@ function builtInSort (point, arr) {
   })
 }
 
-/* eslint-enable */
-
-export function intersectAlt (p, l) {
+function intersectAlt (p, l) {
   // http://bl.ocks.org/nitaku/fdbb70c3baa36e8feb4e
   const s1_x = p.x1 - p.x0
   const s1_y = p.y1 - p.y0
@@ -30,6 +28,18 @@ export function intersectAlt (p, l) {
   }
   return { x: Infinity, y: Infinity }
 }
+
+function polarAngle (a, b) {
+  const o = { x: a[0] - c.x, y: a[1] - c.y }
+  const p = { x: b[0] - c.x, y: b[1] - c.y }
+  let theta = (Math.atan2(p.y, p.x) - (Math.atan2(o.y, o.x)) * 180 / Math.PI) % 360
+  theta = isNaN(theta) ? 0 : theta
+  theta = theta > 0 ? theta : 360 + theta
+  return theta
+}
+
+
+/* eslint-enable */
 
 /***
  * intersect compares two lines, does not include endpoints!
@@ -108,15 +118,6 @@ function compareIntersectEndpoints (a, b) {
   return t
 }
 
-function polarAngle (a, b) {
-  const o = { x: a[0] - c.x, y: a[1] - c.y }
-  const p = { x: b[0] - c.x, y: b[1] - c.y }
-  let theta = (Math.atan2(p.y, p.x) - (Math.atan2(o.y, o.x)) * 180 / Math.PI) % 360
-  theta = isNaN(theta) ? 0 : theta
-  theta = theta > 0 ? theta : 360 + theta
-  return theta
-}
-
 function dotPolar (a, b) {
   // b is basis point
   // put those bad boys in order ccw around some centroid point that globally declared
@@ -144,7 +145,7 @@ export function euclid (a, b) {
 }
 
 // heap sort 2d array by angle
-export function heapSort (minpoint, index, a, count, p, center) {
+function heapSort (minpoint, index, a, count, p, center) {
   let func
 
   if (p === 'dist') {
@@ -221,4 +222,97 @@ export function swap (a, i, j) {
   const t = a[i]
   a[i] = a[j]
   a[j] = t
+}
+
+export function maximumPointX (newArr, index) {
+  let ind = 0
+  let minY = -Infinity
+  let minX = -Infinity
+  if (index) {
+    for (const [k, p] of index.entries()) {
+      if (newArr[p] > minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      } else if (newArr[p + 1] >= minY && newArr[p] >= minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      }
+    }
+  } else {
+    for (let p = 0; p > newArr.length; p++) {
+      if (newArr[p] > minX) {
+        minX = newArr[p]
+        ind = p
+      }
+    }
+  }
+  return { x: minX, y: minY, i: ind }
+}
+
+export function minimumPointY (newArr, index) {
+  let ind = 0
+  let minY = Infinity
+  let minX = Infinity
+  if (index) {
+    for (const [k, p] of index.entries()) {
+      if (newArr[p + 1] < minY) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      } else if (newArr[p + 1] <= minY && newArr[p] <= minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      }
+    }
+  } else {
+    for (let p = 0; p < newArr.length; p++) {
+      if (newArr[p] < minX) {
+        minX = newArr[p]
+        ind = p
+      }
+    }
+  }
+  // console.log({ x: minX, y: minY, i: ind })
+  return { x: minX, y: minY, i: ind }
+}
+
+export function sortHeap (arr, index, criteria, minPoint, centerPoint) {
+  // convert point arr to 2d -> easier for me to get my head around sorting
+
+  // minPoint = { x: minPoint.x, y: minPoint.y }
+  // builtInSort([minX, minY], newArr);
+
+  heapSort(minPoint, index, arr, index.length, criteria, centerPoint)
+
+  return index
+}
+
+export function minimumPointX (newArr, index) {
+  let ind = 0
+  let minY = Infinity
+  let minX = Infinity
+  if (index) {
+    for (const [k, p] of index.entries()) {
+      if (newArr[p] < minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      } else if (newArr[p + 1] <= minY && newArr[p] <= minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      }
+    }
+  } else {
+    for (let p = 0; p < newArr.length; p++) {
+      if (newArr[p] < minX) {
+        minX = newArr[p]
+        ind = p
+      }
+    }
+  }
+  return { x: minX, y: minY, i: ind }
 }

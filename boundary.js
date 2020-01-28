@@ -1,4 +1,4 @@
-import { heapSort, euclid, intersect, slope, swap } from './helpers'
+import { euclid, intersect, maximumPointX, minimumPointY, minimumPointX, slope, swap, sortHeap } from './helpers'
 
 var counter = 0
 
@@ -18,7 +18,6 @@ export default class Boundary {
 
     this.ray = null
     this.hull = this.findConcaveHull(k)
-    this.index = this.hull
   }
 
   testFunctions () {
@@ -29,9 +28,11 @@ export default class Boundary {
 
   findConcaveHull (k) {
     // alt index is sorted to minX value
-    this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
-    this.hull = this.concave(this.index.slice(), k)
-    return this.hull
+    const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
+    let hull = this.concave(index, k)
+    hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
+    hull.push(hull[0])
+    return hull
   }
 
   concave (index, k) {
@@ -42,7 +43,7 @@ export default class Boundary {
     // also sort it so all points are in order from some min point  on the xy plane
     const stopVal = Infinity // 76 // Infinity // and beyond
     const oldIndex = index.slice()
-    console.log('new k', k)
+    // console.log('new k', k)
     if (index.length < 3) {
       console.log('len less than 3')
       return null
@@ -85,7 +86,7 @@ export default class Boundary {
         // This is so that when the first point is added to the end of the hull, it doesn't get used to check for intersections
         let lastPoint = 0
         if (cPoints[i] === firstPoint.coord) {
-          console.log('back to first', firstPoint)
+          // console.log('back to first', firstPoint)
           lastPoint = 1
         }
         let j = 1
@@ -126,7 +127,7 @@ export default class Boundary {
       // this.cPoints.splice(i, 1)
 
       if (its) {
-        console.log('intersection found at k ', k, its)
+        // console.log('intersection found at k ', k, its)
         // if (kk + 1 === 12) {
         //   console.log(counter)
         //   return hull
@@ -137,7 +138,7 @@ export default class Boundary {
       hull.push(currentPoint)
 
       if (counter > stopVal) {
-        console.log('test', [this.coords[currentPoint], this.coords[currentPoint + 1]], this.subset(cPoints))
+        // console.log('test', [this.coords[currentPoint], this.coords[currentPoint + 1]], this.subset(cPoints))
         return hull // .concat(cPoints)
       }
       index.splice(index.indexOf(currentPoint), 1)
@@ -153,14 +154,14 @@ export default class Boundary {
       }
     }
     if (!allInside) {
-      console.log('Another time round')
+      // console.log('Another time round')
       //  if (kk + 1 === 11) {
       //    console.log(counter)
       //    return hull
       //  }
       return this.concave(oldIndex, ++kk)
     }
-    console.log('made it out')
+    // console.log('made it out')
     this.k = kk
     return hull
   }
@@ -243,9 +244,9 @@ export default class Boundary {
 
   sortHeapAndClean (arr, ind, criteria, minPoint, centerPoint) {
     // console.log(this.index, this.coords2D)
-    console.log(minPoint, centerPoint)
+  //  console.log(minPoint, centerPoint)
     ind = sortHeap(arr.slice(), ind.slice(), criteria, minPoint, centerPoint)
-    console.log('heap clean res\n', arr, ind)
+    // console.log('heap clean res\n', arr, ind)
     ind = this.clean(ind)
     return ind
   }
@@ -341,6 +342,10 @@ export default class Boundary {
     console.log(p)
   }
 
+  get hullCoords () {
+    return this.subset(this.hull)
+  }
+
   subset (indices) {
     const rv = []
     for (const i of indices) {
@@ -358,102 +363,9 @@ export default class Boundary {
 
   get sortedCoords () {
     const newArr = []
-    for (const i of this.index) {
+    for (const i of this.hull) {
       newArr.push(this.coords[i], this.coords[i + 1])
     }
     return newArr
   }
-}
-
-function sortHeap (arr, index, criteria, minPoint, centerPoint) {
-  // convert point arr to 2d -> easier for me to get my head around sorting
-
-  // minPoint = { x: minPoint.x, y: minPoint.y }
-  // builtInSort([minX, minY], newArr);
-
-  heapSort(minPoint, index, arr, index.length, criteria, centerPoint)
-
-  return index
-}
-
-function maximumPointX (newArr, index) {
-  let ind = 0
-  let minY = -Infinity
-  let minX = -Infinity
-  if (index) {
-    for (const [k, p] of index.entries()) {
-      if (newArr[p] > minX) {
-        minX = newArr[p]
-        minY = newArr[p + 1]
-        ind = k
-      } else if (newArr[p + 1] >= minY && newArr[p] >= minX) {
-        minX = newArr[p]
-        minY = newArr[p + 1]
-        ind = k
-      }
-    }
-  } else {
-    for (let p = 0; p > newArr.length; p++) {
-      if (newArr[p] > minX) {
-        minX = newArr[p]
-        ind = p
-      }
-    }
-  }
-  return { x: minX, y: minY, i: ind }
-}
-
-function minimumPointY (newArr, index) {
-  let ind = 0
-  let minY = Infinity
-  let minX = Infinity
-  if (index) {
-    for (const [k, p] of index.entries()) {
-      if (newArr[p + 1] < minY) {
-        minX = newArr[p]
-        minY = newArr[p + 1]
-        ind = k
-      } else if (newArr[p + 1] <= minY && newArr[p] <= minX) {
-        minX = newArr[p]
-        minY = newArr[p + 1]
-        ind = k
-      }
-    }
-  } else {
-    for (let p = 0; p < newArr.length; p++) {
-      if (newArr[p] < minX) {
-        minX = newArr[p]
-        ind = p
-      }
-    }
-  }
-  // console.log({ x: minX, y: minY, i: ind })
-  return { x: minX, y: minY, i: ind }
-}
-
-function minimumPointX (newArr, index) {
-  let ind = 0
-  let minY = Infinity
-  let minX = Infinity
-  if (index) {
-    for (const [k, p] of index.entries()) {
-      if (newArr[p] < minX) {
-        minX = newArr[p]
-        minY = newArr[p + 1]
-        ind = k
-      } else if (newArr[p + 1] <= minY && newArr[p] <= minX) {
-        minX = newArr[p]
-        minY = newArr[p + 1]
-        ind = k
-      }
-    }
-  } else {
-    for (let p = 0; p < newArr.length; p++) {
-      if (newArr[p] < minX) {
-        minX = newArr[p]
-        ind = p
-      }
-    }
-  }
-  return { x: minX, y: minY, i: ind }
 }
