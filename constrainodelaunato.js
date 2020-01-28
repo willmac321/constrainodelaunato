@@ -696,6 +696,7 @@
         this.minY = minimumPointY(this.coords, this.index);
         this.minX = minimumPointX(this.coords, this.index);
         this.maxX = maximumPointX(this.coords, this.index);
+        this.hullTree = [];
 
         this.ray = null;
         this.hull = this.findConcaveHull(k);
@@ -711,19 +712,140 @@
       findConcaveHull (k) {
         // alt index is sorted to minX value
         this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
-        this.hull = this.concave(this.index.slice(), k);
+        const firstPointIndex = minimumPointY(this.coords, this.index).i;
+        const firstPoint = { i: firstPointIndex, coord: this.index[firstPointIndex] };
+        const index = this.index.slice();
+        index.splice(firstPoint.i, 1);
+        index.push(firstPoint.coord);
+        this.hull = this.newConcave(index, k, [], firstPoint);
         return this.hull
       }
 
-      concave (index, k) {
+      newConcave (index, k, hull, firstPoint) {
+        const oldIndex = index.slice();
+
+        // console.log('new k', k)
+        if (index.length < 3) {
+          console.log('len less than 3');
+          return null
+        } else if (k > index.length - 1) {
+          console.log(counter);
+          console.log('k is too big');
+          return null
+        } else if (hull && hull.length > 1 && hull[0] === hull[hull.length - 1]) {
+          return hull
+        } else if (index.length === 3) {
+          console.log('len 3');
+          return hull.append(index)
+        }
+
+        let kk = Math.min(Math.max(k, 3), index.length - 1);
+        // i is a pointer to the relative index not a loc in this.coords
+        // so, index of that index gives a this.coords pointer
+        let currentPoint = firstPoint.coord;
+
+        hull.push(firstPoint.coord);
+
+        // remove point that you are working on from available points
+        index.splice(firstPoint.i, 1);
+        let temp;
+        // prevent premature loopback to end point
+        if (hull.length < 4) {
+          temp = index.splice(index.length - 1, 1);
+        }
+        counter++;
+        // find nearest neighbors
+        const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
+        // readd end point after finding nearest points
+        if (hull.length < 4) {
+          index.push(temp);
+        }
+        // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
+        const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
+        const step = hull.length - 1;
+        let goodPoints = [];
+        // iterate over points to narrow down selection of non-intersecting points
+        for (const pnt of cPoints) {
+          // This is so that when the first point is added to the end of the hull, it doesn't get used to check for intersections
+          let lastPoint = 0;
+          if (pnt === firstPoint.coord) {
+            lastPoint = 1;
+          }
+          let j = 0;
+          let its = false;
+          // check for intersection with previous points
+          while (!its && j < hull.length - lastPoint) {
+            const l = {
+              x0: this.coords[hull[step]],
+              y0: this.coords[hull[step] + 1],
+              x1: this.coords[pnt],
+              y1: this.coords[pnt + 1]
+            };
+            const p = {
+              x0: this.coords[hull[step - j]],
+              y0: this.coords[hull[step - j] + 1],
+              x1: this.coords[hull[step - 1 - j]],
+              y1: this.coords[hull[step - 1 - j] + 1]
+            };
+            // the endpoint of one line segment is always intersecting the endpoint of a connected line segment, how to ignore this intersection?
+            const ints = intersect(p, l, true);
+            const endpointsMatch = (p.x0 === l.x0 && p.y0 === l.y0);
+            if (isFinite(ints.x) && !endpointsMatch) {
+            // console.log(l, p, ints, isFinite(ints.x), !endpointsMatch)
+              its = true;
+            }
+            j++;
+          }
+          if (!its) {
+            goodPoints.push(pnt);
+          }
+        }
+
+        if (goodPoints === 0) {
+          console.log('Another time round');
+          return null // this.newConcave(oldIndex, ++kk, hull, currentPoint)
+        }
+
+        const hullTree = [];
+        // iterate over all points that are good
+        for (const g of goodPoints) {
+          // check that no intersections
+          let allInside = false;
+          for (const ind of index) {
+            allInside = this.pointInOrOut(
+              [this.coords[ind], this.coords[ind + 1]],
+              hull.concat([g]), this.maxX.x + 10);
+          }
+          // if shape is closed, return that shape
+          if (allInside) {
+            return hull.concat([g])
+          } else {
+          // else keep going with that same k value
+            hullTree.push(this.newConcave(index.slice(), k, hull.concat([g]), { i: g, coord: this.index[g] }));
+          }
+        }
+
+        let t = Infinity;
+        for (let h = 0; h < hullTree.length; h++) {
+          if(hullTree[h].length < t && hullTree[h].length > 0) {
+            t = h;
+          }
+        }
+
+        return hullTree[t]
+      }
+
+      concave (index, k, hull) {
         // k nearest neighbor babbbbyyyy
         // https://towardsdatascience.com/the-concave-hull-c649795c0f0f
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
-        const stopVal = 192; // Infinity // 76 // Infinity // and beyond
+
+        const stopVal = Infinity; // 76 // Infinity // and beyond
         const oldIndex = index.slice();
-        console.log('new k', k);
+
+        // console.log('new k', k)
         if (index.length < 3) {
           console.log('len less than 3');
           return null
@@ -733,7 +855,7 @@
           return null
         } else if (index.length === 3) {
           console.log('len 3');
-          return index
+          return hull.append(index)
         }
 
         let kk = Math.min(Math.max(k, 3), index.length - 1);
@@ -742,7 +864,9 @@
         const firstPointIndex = minimumPointY(this.coords, index).i;
         const firstPoint = { i: firstPointIndex, coord: index[firstPointIndex] };
         let currentPoint = firstPoint.coord;
-        const hull = [firstPoint.coord];
+
+        hull.push(firstPoint.coord);
+
         // why is step init to 2?
         // Because the paper was written in Matlab....
         let step = 1;
@@ -772,7 +896,7 @@
                 x0: this.coords[hull[step - 1]],
                 y0: this.coords[hull[step - 1] + 1],
                 x1: this.coords[cPoints[i + 1]],
-                y1: this.coords[cPoints[i + 1] + 1],
+                y1: this.coords[cPoints[i + 1] + 1]
               };
               const p = {
                 x0: this.coords[hull[step - j]],
@@ -977,7 +1101,7 @@
             }
           }
         }
-        console.log(windingNum !== 0);
+        // console.log(windingNum !== 0)
         return Math.abs(windingNum) !== 0
       }
 
