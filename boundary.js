@@ -231,17 +231,11 @@ export default class Boundary {
       if (!lastSlope || newSlope !== lastSlope) {
         rv.push(index[i])
         c++
-      } else {
-        if (currentPoint[0] === 153 && currentPoint[1] === 97) {
-          console.log(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]], newSlope, lastSlope, this.subset(rv))
-        }
       }
       i++
-
       if (i > index.length - 1) {
         return rv
       }
-
       lastSlope = newSlope
     }
     return rv
