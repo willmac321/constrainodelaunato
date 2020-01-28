@@ -240,6 +240,18 @@ function draw() {
     ctx.lineWidth = 3;
 	ctx.stroke();
 
+            ctx.beginPath();
+            for (var i = 0; i < delaunay.boundary.cPoints.length; i++) {
+                let op = {
+                    x: delaunay.coords[delaunay.boundary.cPoints[i]], 
+                    y: delaunay.coords[delaunay.boundary.cPoints[i] + 1]
+                };
+                ctx.fillStyle = 'magenta';
+                ctx.rect(padding + ratio * (op.x - minX) - 3, padding + ratio * (op.y - minY) - 3, 10, 10);
+                ctx.fill();
+            }
+
+
 
 }
 

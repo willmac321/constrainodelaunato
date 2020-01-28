@@ -697,6 +697,9 @@
         this.minX = minimumPointX(this.coords, this.index);
         this.maxX = maximumPointX(this.coords, this.index);
 
+        // TODO remove this
+        this.cPoints = [];
+
         this.ray = null;
         this.hull = this.findConcaveHull(k);
         this.index = this.hull;
@@ -721,7 +724,7 @@
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
-        const stopVal = 192; // Infinity // 76 // Infinity // and beyond
+        const stopVal = Infinity; // 76 // Infinity // and beyond
         const oldIndex = index.slice();
         console.log('new k', k);
         if (index.length < 3) {
@@ -757,12 +760,16 @@
           const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
           // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
           const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
+          if (cPoints.indexOf(firstPoint.coord) > -1) {
+            console.log(cPoints);
+          }
           let its = true;
           let i = -1;
           while (its && i < cPoints.length - 1) {
             // This is so that when the first point is added to the end of the hull, it doesn't get used to check for intersections
             let lastPoint = 0;
             if (cPoints[i] === firstPoint.coord) {
+              console.log('back to first', firstPoint);
               lastPoint = 1;
             }
             let j = 1;
@@ -772,7 +779,7 @@
                 x0: this.coords[hull[step - 1]],
                 y0: this.coords[hull[step - 1] + 1],
                 x1: this.coords[cPoints[i + 1]],
-                y1: this.coords[cPoints[i + 1] + 1],
+                y1: this.coords[cPoints[i + 1] + 1]
               };
               const p = {
                 x0: this.coords[hull[step - j]],
@@ -783,26 +790,39 @@
               // the endpoint of one line segment is always intersecting the endpoint of a connected line segment, how to ignore this intersection?
               const ints = intersect(p, l, true);
               const endpointsMatch = (p.x0 === l.x0 && p.y0 === l.y0);
+              const isClose = (cPoints[i + 1] === firstPoint.coord) && (p.x1 === l.x1 && p.y1 === l.y1);
               // (p.x0 !== l.x0 && p.y0 !== l.y0) ||
-              // if (l.x0 === 216 && l.y0 === 133) {
+              // if (l.x0 === 221 && l.y0 === 90) {
               //   console.log(l, p, ints, isFinite(ints.x), (p.x1 === l.x0 && p.y1 === l.y0))
               // }
-              if (isFinite(ints.x) && !endpointsMatch) {
-                console.log(l, p, ints, isFinite(ints.x), !endpointsMatch);
+              if (isFinite(ints.x) && !endpointsMatch && !isClose) {
                 its = true;
               }
+              // if (counter > 269) {
+              //   console.log(l, p, ints, isFinite(ints.x), !endpointsMatch, cPoints[i + 1], firstPoint)
+              //   console.log(its)
+              // }
               j++;
             }
             i++;
           }
+          this.cPoints = cPoints.slice();
+          // this.cPoints.splice(i, 1)
+
           if (its) {
             console.log('intersection found at k ', k, its);
+            // if (kk + 1 === 12) {
+            //   console.log(counter)
+            //   return hull
+            // }
             return this.concave(oldIndex, ++kk)
           }
           currentPoint = cPoints[i];
           hull.push(currentPoint);
+
           if (counter > stopVal) {
-            return hull// .concat(cPoints)
+            console.log('test', [this.coords[currentPoint], this.coords[currentPoint + 1]], this.subset(cPoints));
+            return hull // .concat(cPoints)
           }
           index.splice(index.indexOf(currentPoint), 1);
           step++;
@@ -818,6 +838,10 @@
         }
         if (!allInside) {
           console.log('Another time round');
+          //  if (kk + 1 === 11) {
+          //    console.log(counter)
+          //    return hull
+          //  }
           return this.concave(oldIndex, ++kk)
         }
         console.log('made it out');
@@ -826,6 +850,7 @@
       }
 
       sortByAngle (kNearestPoints, currentPoint, lastPoint) {
+        // const lastPointIndex = lastPoint
         if (!lastPoint || lastPoint === currentPoint) {
           lastPoint = [this.maxX.x + 10, this.coords[currentPoint + 1]];
         } else {
@@ -854,15 +879,15 @@
           }
           const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]];
           const newSlope = slope(lastPoint, newPoint);
-          const newDist = manhattenDist(currentPointArr, newPoint);
+          const newDist = euclid(currentPointArr, newPoint);
           // console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
           // console.log(`new point ${dotProduct(lastPoint, newPoint)}`)
           if (lastSlope && lastDist && Math.abs(newSlope) === Math.abs(lastSlope) && newDist < lastDist) {
             // flipflop the two points in array order if the slopes are the same
             // sort by euclid instead of straight swap
             swap$1(rv, k, k - 1);
-            lastDist = manhattenDist(currentPointArr, [this.coords[rv[k]], this.coords[rv[k] + 1]]);
-            // if ((this.ray.x1 === 220 && this.ray.y1 === 89) || (this.ray.x0 === 220 && this.ray.y0 === 89)) {
+            lastDist = euclid(currentPointArr, [this.coords[rv[k]], this.coords[rv[k] + 1]]);
+            // if ((this.ray.x1 === 221 && this.ray.y1 === 90) || (this.ray.x0 === 221 && this.ray.y0 === 90)) {
             //   console.log(this.ray, this.subset(rv))
             // }
           } else {
@@ -878,8 +903,7 @@
       nearestPoints (index, cP, kk) {
         // console.log(cP)
         // console.log([this.coords[cP], this.coords[cP + 1]])
-        index = sortHeap(this.coords.slice(), index.slice(), 'dist', [this.coords[cP], this.coords[cP + 1]]);
-        // console.log(index)
+        index = sortHeap(this.coords.slice(), index.slice(), 'euclid', [this.coords[cP], this.coords[cP + 1]]);
         const rv = [];
         kk = Math.min(kk, index.length - 1);
         for (let i = 0; i < kk; i++) {

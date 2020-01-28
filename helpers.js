@@ -131,13 +131,13 @@ function dotPolar (a, b) {
   return theta
 }
 
-export function manhattenDist (a, b) {
+function manhattenDist (a, b) {
   const p = { x: a[0], y: a[1] }
   const o = { x: b[0], y: b[1] }
   return Math.abs(p.x - o.x) + Math.abs(p.y - o.y)
 }
 
-function euclid (a, b) {
+export function euclid (a, b) {
   const p = { x: a[0], y: a[1] }
   const o = { x: b[0], y: b[1] }
   return Math.sqrt(Math.pow(p.x - o.x, 2) + Math.pow(p.y - o.y, 2))
