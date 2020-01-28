@@ -760,9 +760,9 @@
           const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
           // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
           const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
-          if (cPoints.indexOf(firstPoint.coord) > -1) {
-            console.log(cPoints);
-          }
+          // if (cPoints.indexOf(firstPoint.coord) > -1) {
+          //   console.log(cPoints)
+          // }
           let its = true;
           let i = -1;
           while (its && i < cPoints.length - 1) {
@@ -882,14 +882,14 @@
           const newDist = euclid(currentPointArr, newPoint);
           // console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
           // console.log(`new point ${dotProduct(lastPoint, newPoint)}`)
-          if (lastSlope && lastDist && Math.abs(newSlope) === Math.abs(lastSlope) && newDist < lastDist) {
+          //        if ((this.ray.x0 === 153 && this.ray.y0 === 97)) {
+          //          console.log(this.ray, newSlope, lastSlope, lastDist, newDist, this.subset(rv))
+          //        }
+          if (lastSlope && lastDist && (Math.abs(newSlope) === Math.abs(lastSlope) || (newSlope === Infinity && lastSlope === -Infinity)) && newDist < lastDist) {
             // flipflop the two points in array order if the slopes are the same
             // sort by euclid instead of straight swap
             swap$1(rv, k, k - 1);
             lastDist = euclid(currentPointArr, [this.coords[rv[k]], this.coords[rv[k] + 1]]);
-            // if ((this.ray.x1 === 221 && this.ray.y1 === 90) || (this.ray.x0 === 221 && this.ray.y0 === 90)) {
-            //   console.log(this.ray, this.subset(rv))
-            // }
           } else {
             lastDist = newDist;
           }
@@ -903,11 +903,30 @@
       nearestPoints (index, cP, kk) {
         // console.log(cP)
         // console.log([this.coords[cP], this.coords[cP + 1]])
-        index = sortHeap(this.coords.slice(), index.slice(), 'euclid', [this.coords[cP], this.coords[cP + 1]]);
+        const currentPoint = [this.coords[cP], this.coords[cP + 1]];
+        index = sortHeap(this.coords.slice(), index.slice(), 'euclid', currentPoint);
         const rv = [];
+        let lastSlope;
         kk = Math.min(kk, index.length - 1);
-        for (let i = 0; i < kk; i++) {
-          rv.push(index[i]);
+        let i = 0;
+        let c = 0;
+        while (c < kk) {
+          const newSlope = slope(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]]);
+          if (!lastSlope || newSlope !== lastSlope) {
+            rv.push(index[i]);
+            c++;
+          } else {
+            if (currentPoint[0] === 153 && currentPoint[1] === 97) {
+              console.log(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]], newSlope, lastSlope, this.subset(rv));
+            }
+          }
+          i++;
+
+          if (i > index.length - 1) {
+            return rv
+          }
+
+          lastSlope = newSlope;
         }
         return rv
       }
@@ -1001,7 +1020,6 @@
             }
           }
         }
-        console.log(windingNum !== 0);
         return Math.abs(windingNum) !== 0
       }
 
