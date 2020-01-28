@@ -131,7 +131,7 @@ function dotPolar (a, b) {
   return theta
 }
 
-function manhattenDist (a, b) {
+export function manhattenDist (a, b) {
   const p = { x: a[0], y: a[1] }
   const o = { x: b[0], y: b[1] }
   return Math.abs(p.x - o.x) + Math.abs(p.y - o.y)

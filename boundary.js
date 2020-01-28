@@ -1,9 +1,10 @@
-import { dotProduct, heapSort, intersect, slope, swap } from './helpers'
+import { dotProduct, heapSort, manhattenDist, intersect, slope, swap } from './helpers'
 
 var counter = 0
 
 export default class Boundary {
   constructor (arr, k = 3) {
+    this.k = k
     this.coords = arr.slice()
     this.index = [...this.coords.keys()].filter((i) => i % 2 === 0)
     this.index = this.clean(this.index)
@@ -15,18 +16,12 @@ export default class Boundary {
     this.ray = null
     this.hull = this.findConcaveHull(k)
     this.index = this.hull
-
-    // center of test from html is not inside boundary
-    // this point is though
-    // this.testFunctions()
   }
 
   testFunctions () {
     this.pointInOrOut([this.center.x, this.center.y], this.index, this.minX.x - 10)
     this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index, this.minX.x - 10)
-    // console.log(this.pointInOrOut([180, 100], this.index))
     this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.minX.x, this.minY.y])
-    // this.findHull(3)
   }
 
   findConcaveHull (k) {
@@ -42,7 +37,7 @@ export default class Boundary {
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
-    const stopVal = 76 // Infinity // and beyond
+    const stopVal = 192 // Infinity // 76 // Infinity // and beyond
     const oldIndex = index.slice()
     console.log('new k', k)
     if (index.length < 3) {
@@ -93,18 +88,27 @@ export default class Boundary {
             x0: this.coords[hull[step - 1]],
             y0: this.coords[hull[step - 1] + 1],
             x1: this.coords[cPoints[i + 1]],
-            y1: this.coords[cPoints[i + 1] + 1]
+            y1: this.coords[cPoints[i + 1] + 1],
           }
           const p = {
-            x0: this.coords[hull[step - 1 - j]],
-            y0: this.coords[hull[step - 1 - j] + 1],
-            x1: this.coords[hull[step - j]],
-            y1: this.coords[hull[step - j] + 1]
+            x0: this.coords[hull[step - j]],
+            y0: this.coords[hull[step - j] + 1],
+            x1: this.coords[hull[step - 1 - j]],
+            y1: this.coords[hull[step - 1 - j] + 1]
           }
-          its = isFinite(intersect(p, l, false).x)
+          // the endpoint of one line segment is always intersecting the endpoint of a connected line segment, how to ignore this intersection?
+          const ints = intersect(p, l, true)
+          const endpointsMatch = (p.x0 === l.x0 && p.y0 === l.y0)
+          // (p.x0 !== l.x0 && p.y0 !== l.y0) ||
+          // if (l.x0 === 216 && l.y0 === 133) {
+          //   console.log(l, p, ints, isFinite(ints.x), (p.x1 === l.x0 && p.y1 === l.y0))
+          // }
+          if (isFinite(ints.x) && !endpointsMatch) {
+            console.log(l, p, ints, isFinite(ints.x), !endpointsMatch)
+            its = true
+          }
           j++
         }
-        // TODO add if all points intersect, pop point and go back to point before recursion?
         i++
       }
       if (its) {
@@ -133,10 +137,12 @@ export default class Boundary {
       return this.concave(oldIndex, ++kk)
     }
     console.log('made it out')
+    this.k = kk
     return hull
   }
 
   sortByAngle (kNearestPoints, currentPoint, lastPoint) {
+    const lastPointIndex = lastPoint
     if (!lastPoint || lastPoint === currentPoint) {
       lastPoint = [this.maxX.x + 10, this.coords[currentPoint + 1]]
     } else {
@@ -154,7 +160,8 @@ export default class Boundary {
     // if two points are on the same line eq as current point, currently the further one is considered a 'closer angle', perform swap of these coords below
     //    console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`)
 
-    let lastSlope = slope(lastPoint, currentPointArr)
+    let lastSlope
+    let lastDist
     // if two points relative to each other are in line
     // Issue here when 3 points line up and one is segment from origin
     for (let k = 0; k < rv.length; k++) {
@@ -164,13 +171,21 @@ export default class Boundary {
       }
       const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]]
       const newSlope = slope(lastPoint, newPoint)
-            console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
-    //        console.log(`new point ${dotProduct(lastPoint, newPoint)}`)
-      if (lastSlope && (newSlope === lastSlope || -newSlope === lastSlope)) {
+      const newDist = manhattenDist(currentPointArr, newPoint)
+      // console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
+      // console.log(`new point ${dotProduct(lastPoint, newPoint)}`)
+      if (lastSlope && lastDist && Math.abs(newSlope) === Math.abs(lastSlope) && newDist < lastDist) {
         // flipflop the two points in array order if the slopes are the same
         // sort by euclid instead of straight swap
         swap(rv, k, k - 1)
+        lastDist = manhattenDist(currentPointArr, [this.coords[rv[k]], this.coords[rv[k] + 1]])
+        // if ((this.ray.x1 === 220 && this.ray.y1 === 89) || (this.ray.x0 === 220 && this.ray.y0 === 89)) {
+        //   console.log(this.ray, this.subset(rv))
+        // }
+      } else {
+        lastDist = newDist
       }
+
       lastSlope = slope(lastPoint, newPoint)
     }
 
@@ -377,7 +392,7 @@ function minimumPointY (newArr, index) {
       }
     }
   }
-  console.log({ x: minX, y: minY, i: ind })
+  // console.log({ x: minX, y: minY, i: ind })
   return { x: minX, y: minY, i: ind }
 }
 
