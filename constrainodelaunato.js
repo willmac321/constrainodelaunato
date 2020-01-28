@@ -697,6 +697,9 @@
         this.minX = minimumPointX(this.coords, this.index);
         this.maxX = maximumPointX(this.coords, this.index);
 
+        // TODO remove this
+        this.cPoints = [];
+
         this.ray = null;
         this.hull = this.findConcaveHull(k);
         this.index = this.hull;
@@ -721,7 +724,7 @@
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
-        const stopVal = 192; // Infinity // 76 // Infinity // and beyond
+        const stopVal = 936; // Infinity // 76 // Infinity // and beyond
         const oldIndex = index.slice();
         console.log('new k', k);
         if (index.length < 3) {
@@ -754,9 +757,9 @@
             index.push(firstPoint.coord);
           }
           // find nearest neighbors
-          const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
+          let kNearestPoints = this.nearestPoints(index, currentPoint, kk);
           // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
-          const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
+          let cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
           let its = true;
           let i = -1;
           while (its && i < cPoints.length - 1) {
@@ -772,7 +775,7 @@
                 x0: this.coords[hull[step - 1]],
                 y0: this.coords[hull[step - 1] + 1],
                 x1: this.coords[cPoints[i + 1]],
-                y1: this.coords[cPoints[i + 1] + 1],
+                y1: this.coords[cPoints[i + 1] + 1]
               };
               const p = {
                 x0: this.coords[hull[step - j]],
@@ -781,28 +784,33 @@
                 y1: this.coords[hull[step - 1 - j] + 1]
               };
               // the endpoint of one line segment is always intersecting the endpoint of a connected line segment, how to ignore this intersection?
-              const ints = intersect(p, l, true);
+              const ints = intersect(p, l, false);
               const endpointsMatch = (p.x0 === l.x0 && p.y0 === l.y0);
               // (p.x0 !== l.x0 && p.y0 !== l.y0) ||
               // if (l.x0 === 216 && l.y0 === 133) {
               //   console.log(l, p, ints, isFinite(ints.x), (p.x1 === l.x0 && p.y1 === l.y0))
               // }
               if (isFinite(ints.x) && !endpointsMatch) {
-                console.log(l, p, ints, isFinite(ints.x), !endpointsMatch);
-                its = true;
+                {
+                  its = true;
+                }
               }
               j++;
             }
             i++;
           }
+          this.cPoints = cPoints.slice();
+          this.cPoints.splice(i, 1);
+
           if (its) {
             console.log('intersection found at k ', k, its);
             return this.concave(oldIndex, ++kk)
           }
           currentPoint = cPoints[i];
           hull.push(currentPoint);
+
           if (counter > stopVal) {
-            return hull// .concat(cPoints)
+            return hull // .concat(cPoints)
           }
           index.splice(index.indexOf(currentPoint), 1);
           step++;
@@ -818,6 +826,9 @@
         }
         if (!allInside) {
           console.log('Another time round');
+          if (kk + 1 === 11) {
+            return hull
+          }
           return this.concave(oldIndex, ++kk)
         }
         console.log('made it out');
@@ -878,8 +889,7 @@
       nearestPoints (index, cP, kk) {
         // console.log(cP)
         // console.log([this.coords[cP], this.coords[cP + 1]])
-        index = sortHeap(this.coords.slice(), index.slice(), 'dist', [this.coords[cP], this.coords[cP + 1]]);
-        // console.log(index)
+        index = sortHeap(this.coords.slice(), index.slice(), 'euclid', [this.coords[cP], this.coords[cP + 1]]);
         const rv = [];
         kk = Math.min(kk, index.length - 1);
         for (let i = 0; i < kk; i++) {
