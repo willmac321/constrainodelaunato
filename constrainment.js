@@ -1,5 +1,5 @@
 import Delaunator from 'delaunator'
-import Boundary from './boundary'
+import Boundary from './boundarywithflair'
 
 export default class ConstrainoDelaunato {
   constructor (coords, boundary, k) {
@@ -15,10 +15,10 @@ export default class ConstrainoDelaunato {
     }
     if (boundary) {
       this.boundary = new Boundary(boundary, k)
-      this.boundary.interpolate(coords)
-      coords = coords.concat(this.boundary.hullCoords)
+      //coords = coords.concat(this.boundary.hullCoords)
     }
     this.delaunator = new Delaunator(coords)
+    this.boundary.addPoints(this.delaunator.triangles, coords, 30)
     // this.pointInOrOut([1,1]);
   }
 
@@ -47,11 +47,15 @@ export default class ConstrainoDelaunato {
     return this.delaunator.triangles
   }
 
+  get concaveHullCoords () {
+    return this.boundary.hullCoords
+  }
+
   get hull () {
     return this.delaunator.hull
   }
 
   get bound () {
-    return this.boundary.sortedCoords.flat()
+    return this.boundary
   }
 }

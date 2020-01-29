@@ -38,16 +38,16 @@ function polarAngle (a, b) {
   return theta
 }
 
-
 /* eslint-enable */
 
-/***
- * intersect compares two lines, does not include endpoints!
- * @param p is a line segment of type {x0, y0, x1, y1}
- * @param l is a line segment of type {x0, y0, x1, y1}
- * @param checkEndpoints bool - True to include endpoints in intersection calc
- * @return {x, y} at intersect, if they dont intersect, they intersect at infinity
- ***/
+/**
+ * intersect
+ * compares two lines, does not include endpoints!
+ * @param {Object} p object with 4 int values of type {x0, y0, x1, y1} where 0 denotes start point and 1 is endpoint
+ * @param {Object} l object with 4 int values of type {x0, y0, x1, y1} where 0 denotes start point and 1 is endpoint
+ * @param {bool} checkEndpoints=false whether or not to check endpoints in intersection calc, does not check endpoints by default, true to check them
+ * @returns {Object} Intersection point x and y coords, returns x: Inf and y: Inf if points do not intersect
+ */
 export function intersect (p, l, checkEndpoints = false) {
   // compare two line segments to see if they intersect
   const den = ((l.y1 - l.y0) * (p.x1 - p.x0)) - ((l.x1 - l.x0) * (p.y1 - p.y0))
@@ -138,10 +138,33 @@ function manhattenDist (a, b) {
   return Math.abs(p.x - o.x) + Math.abs(p.y - o.y)
 }
 
+/**
+ * euclid
+ *
+ * @param {Array} a x and y coord with a[0] as x
+ * @param {Array} b x and y coord with b[0] as x
+ * @returns {Double} Float/Double value of euclidian distance between two points
+ */
 export function euclid (a, b) {
   const p = { x: a[0], y: a[1] }
   const o = { x: b[0], y: b[1] }
   return Math.sqrt(Math.pow(p.x - o.x, 2) + Math.pow(p.y - o.y, 2))
+}
+
+/**
+ * distLineAndPoint
+ * calculates the distance between a point and a line derived from a supplied line segment
+ * this distance may intersect the line outside of the actual line segment
+ * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+ *
+ * @param {Object} l Line Segment format {x0, y0, x1, y1}
+ * @param {Object} p point format {x, y}
+ * @returns {Float} distance between point and line
+ */
+export function distLineAndPoint (l, p) {
+  const num = Math.abs((l.y1 - l.y0) * p.x - (l.x1 - l.x0) * p.y + l.x1 * l.y0 - l.y1 * l.x0)
+  const dem = Math.sqrt(Math.pow(l.y1 - l.y0, 2) + Math.pow(l.x1 - l.x0, 2))
+  return num / dem
 }
 
 // heap sort 2d array by angle

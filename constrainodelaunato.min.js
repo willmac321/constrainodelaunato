@@ -501,16 +501,16 @@
 
     var c;
 
-
     /* eslint-enable */
 
-    /***
-     * intersect compares two lines, does not include endpoints!
-     * @param p is a line segment of type {x0, y0, x1, y1}
-     * @param l is a line segment of type {x0, y0, x1, y1}
-     * @param checkEndpoints bool - True to include endpoints in intersection calc
-     * @return {x, y} at intersect, if they dont intersect, they intersect at infinity
-     ***/
+    /**
+     * intersect
+     * compares two lines, does not include endpoints!
+     * @param {Object} p object with 4 int values of type {x0, y0, x1, y1} where 0 denotes start point and 1 is endpoint
+     * @param {Object} l object with 4 int values of type {x0, y0, x1, y1} where 0 denotes start point and 1 is endpoint
+     * @param {bool} checkEndpoints=false whether or not to check endpoints in intersection calc, does not check endpoints by default, true to check them
+     * @returns {Object} Intersection point x and y coords, returns x: Inf and y: Inf if points do not intersect
+     */
     function intersect (p, l, checkEndpoints = false) {
       // compare two line segments to see if they intersect
       const den = ((l.y1 - l.y0) * (p.x1 - p.x0)) - ((l.x1 - l.x0) * (p.y1 - p.y0));
@@ -601,10 +601,33 @@
       return Math.abs(p.x - o.x) + Math.abs(p.y - o.y)
     }
 
+    /**
+     * euclid
+     *
+     * @param {Array} a x and y coord with a[0] as x
+     * @param {Array} b x and y coord with b[0] as x
+     * @returns {Double} Float/Double value of euclidian distance between two points
+     */
     function euclid (a, b) {
       const p = { x: a[0], y: a[1] };
       const o = { x: b[0], y: b[1] };
       return Math.sqrt(Math.pow(p.x - o.x, 2) + Math.pow(p.y - o.y, 2))
+    }
+
+    /**
+     * distLineAndPoint
+     * calculates the distance between a point and a line derived from a supplied line segment
+     * this distance may intersect the line outside of the actual line segment
+     * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+     *
+     * @param {Object} l Line Segment format {x0, y0, x1, y1}
+     * @param {Object} p point format {x, y}
+     * @returns {Float} distance between point and line
+     */
+    function distLineAndPoint (l, p) {
+      const num = Math.abs((l.y1 - l.y0) * p.x - (l.x1 - l.x0) * p.y + l.x1 * l.y0 - l.y1 * l.x0);
+      const dem = Math.sqrt(Math.pow(l.y1 - l.y0, 2) + Math.pow(l.x1 - l.x0, 2));
+      return num / dem
     }
 
     // heap sort 2d array by angle
@@ -810,8 +833,8 @@
         // alt index is sorted to minX value
         const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
         let hull = this.concave(index, k);
-        hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
-        hull.push(hull[0]);
+    //    hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
+    //    hull.push(hull[0])
         return hull
       }
 
@@ -1150,6 +1173,58 @@
       }
     }
 
+    class BoundaryExtra extends Boundary {
+      constructor (arr, k = 3) {
+        super(arr, k);
+        this.cPoints = [];
+      }
+
+      /**
+       * addPoints
+       * use final k value from concave boundary for point search in order to
+       * @param {Array} parentArr Array of coordinate cloud used to interpolate boundary points
+       * @param {Array} parentIndex Sorted index array of coordinate cloud used to interpolate boundary points
+       * @param {Integer} dist Max distance to point to trigger interpolation, only one of two points in line segment has to meet this criteria
+       */
+      addPoints (parentArr, parentIndex, dist) {
+        this.k = 3;
+        // get all intersecting lines to the hull line seg
+        for (let p = 0; p < this.hull.length - 1; p++) {
+          const h = this.subset([this.hull[p], this.hull[p + 1]]);
+          const seg = { x0: h[0], y0: h[1], x1: h[2], y1: h[3] };
+          this.getIntersectingLines(seg, parentIndex, parentArr, dist);
+        }
+      }
+
+      getIntersectingLines (lineSeg, indexArr, coords, dist) {
+        for (let [i, t] of indexArr.entries()) {
+          // first check if distance from either point to perpendicular of line seg is less than dist
+          const point = { x: coords[t], y: coords[t + 1] };
+          const d = distLineAndPoint(lineSeg, point);
+          if (d <= dist) {
+            if (i + 1 > indexArr.length - 1) {
+              i = -1;
+            }
+            const coordSeg = { x0: point.x, y0: point.y, x1: coords[indexArr[i + 1]], y1: coords[indexArr[i + 1] + 1] };
+            console.log(coordSeg);
+            return
+          }
+        }
+      }
+
+      interpolate (parentArr) {
+
+      }
+
+      get k () {
+        return super.k
+      }
+
+      set k (v) {
+        super.k = v;
+      }
+    }
+
     class ConstrainoDelaunato {
       constructor (coords, boundary, k) {
         // k is the k-nearest neighbor selection
@@ -1163,11 +1238,11 @@
           boundary = boundary.flat();
         }
         if (boundary) {
-          this.boundary = new Boundary(boundary, k);
-          this.boundary.interpolate(coords);
-          coords = coords.concat(this.boundary.hullCoords);
+          this.boundary = new BoundaryExtra(boundary, k);
+          //coords = coords.concat(this.boundary.hullCoords)
         }
         this.delaunator = new Delaunator(coords);
+        this.boundary.addPoints(this.delaunator.triangles, coords, 30);
         // this.pointInOrOut([1,1]);
       }
 
@@ -1196,12 +1271,16 @@
         return this.delaunator.triangles
       }
 
+      get concaveHullCoords () {
+        return this.boundary.hullCoords
+      }
+
       get hull () {
         return this.delaunator.hull
       }
 
       get bound () {
-        return this.boundary.sortedCoords.flat()
+        return this.boundary
       }
     }
 
