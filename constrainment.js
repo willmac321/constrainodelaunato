@@ -18,7 +18,7 @@ export default class ConstrainoDelaunato {
       //coords = coords.concat(this.boundary.hullCoords)
     }
     this.delaunator = new Delaunator(coords)
-    this.boundary.addPoints(this.delaunator.triangles, coords, 30)
+    this.boundary.addPoints(coords, this.delaunator, 10)
     // this.pointInOrOut([1,1]);
   }
 
