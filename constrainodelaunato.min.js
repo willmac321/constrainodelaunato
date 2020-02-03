@@ -1196,20 +1196,29 @@
           const h = this.subset([this.hull[p], this.hull[p + 1]]);
           const seg = { x0: h[0], y0: h[1], x1: h[2], y1: h[3] };
           const temp = this.getIntersectingLines(seg, edges, parentArr, dist).reverse();
+
+          const ind = sortHeap(temp.map((m) => [m[m.length - 1].x, m[m.length - 1].y]).flat(), [...Array(temp.length).keys()].map((i) => i * 2), 'euclid', [seg.x0, seg.y0]);
+
           this.intersectingLineSegs.push(this.hull[p]);
-          for (const t of temp) {
-            const r = t.pop();
-            const c = this.coords.length;
-            this.coords.push(r.x, r.y);
-            this.intersectingLineSegs.push(c);
-          }
+          const c = this.coords.length;
+          this.coords = this.coords.concat(temp.map((m) => [m[m.length - 1].x, m[m.length - 1].y]).flat());
+          this.intersectingLineSegs = this.intersectingLineSegs.concat(ind.map((m) => m + c));
+
+          // put the coords in order of line seg
+          // for (const t of temp) {
+          //   const r = t.pop()
+          //   const c = this.coords.length
+          //   this.coords.push(r.x, r.y)
+          //   this.intersectingLineSegs.push(c)
+          // }
           // temp.unshift(seg)
           // pntAndItsArr.push(temp)
         }
-        console.log(this.coords.length - this.origCoordsLen);
-        console.log(this.intersectingLineSegs, this.coords);
-        this.intersectingLineSegs = this.sortHeapAndClean(this.coords, this.intersectingLineSegs, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
+        // console.log(this.coords.length - this.origCoordsLen)
+        // console.log(this.intersectingLineSegs, this.coords)
+        // this.intersectingLineSegs = this.sortHeapAndClean(this.coords, this.intersectingLineSegs, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
         this.intersectingLineSegs.push(this.intersectingLineSegs[0]);
+        console.log(this.hull, this.intersectingLineSegs);
 
         this.hull = this.intersectingLineSegs;
       }
