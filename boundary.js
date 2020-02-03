@@ -29,9 +29,9 @@ export default class Boundary {
   findConcaveHull (k) {
     // alt index is sorted to minX value
     const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
-    let hull = this.concave(index, k)
-//    hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
-//    hull.push(hull[0])
+    const hull = this.concave(index, k)
+    // hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
+    // hull.push(hull[0])
     return hull
   }
 

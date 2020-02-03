@@ -832,9 +832,9 @@
       findConcaveHull (k) {
         // alt index is sorted to minX value
         const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
-        let hull = this.concave(index, k);
-    //    hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
-    //    hull.push(hull[0])
+        const hull = this.concave(index, k);
+        // hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
+        // hull.push(hull[0])
         return hull
       }
 
@@ -1177,6 +1177,7 @@
       constructor (arr, k = 3) {
         super(arr, k);
         this.cPoints = [];
+        this.origCoordsLen = arr.length;
         this.intersectingLineSegs = [];
       }
 
@@ -1194,10 +1195,23 @@
         for (let p = 0; p < this.hull.length - 1; p++) {
           const h = this.subset([this.hull[p], this.hull[p + 1]]);
           const seg = { x0: h[0], y0: h[1], x1: h[2], y1: h[3] };
-          const pntAndItsArr = this.getIntersectingLines(seg, edges, parentArr, dist);
-          console.log(pntAndItsArr);
-          // if theres an intersecton(s) on that line, insert it between the start and end point
+          const temp = this.getIntersectingLines(seg, edges, parentArr, dist).reverse();
+          this.intersectingLineSegs.push(this.hull[p]);
+          for (const t of temp) {
+            const r = t.pop();
+            const c = this.coords.length;
+            this.coords.push(r.x, r.y);
+            this.intersectingLineSegs.push(c);
+          }
+          // temp.unshift(seg)
+          // pntAndItsArr.push(temp)
         }
+        console.log(this.coords.length - this.origCoordsLen);
+        console.log(this.intersectingLineSegs, this.coords);
+        this.intersectingLineSegs = this.sortHeapAndClean(this.coords, this.intersectingLineSegs, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
+        this.intersectingLineSegs.push(this.intersectingLineSegs[0]);
+
+        this.hull = this.intersectingLineSegs;
       }
 
       /**
@@ -1208,7 +1222,7 @@
        * @param {Array} coords Actual coordinate array
        * @param {Float} dist Cutoff distance for intersecting line segments
        *
-       * @return {Object} array of an array that contains each point pair index and the x, y coord for intersection
+       * @return {Object} array of an array that contains each point pair index and the x, y coord for intersection format: [index0, index1, {x2, y2}]
        */
       getIntersectingLines (lineSeg, indexArr, coords, dist) {
         const pntAndItsArr = [];
@@ -1224,8 +1238,8 @@
             const coordSeg = { x0: point.x, y0: point.y, x1: coords[indexArr[i + 1]], y1: coords[indexArr[i + 1] + 1] };
             const its = intersect(lineSeg, coordSeg, false);
             if (isFinite(its.x)) {
-              //console.log(d, its, lineSeg, coordSeg, i)
-              this.cPoints.push(indexArr[i], indexArr[i + 1]);
+              // console.log(d, its, lineSeg, coordSeg, i)
+              // this.cPoints.push(indexArr[i], indexArr[i + 1])
               pntAndItsArr.push([indexArr[i], indexArr[i + 1], its]);
             }
           }
@@ -1268,10 +1282,11 @@
         }
         if (boundary) {
           this.boundary = new BoundaryExtra(boundary, k);
-          //coords = coords.concat(this.boundary.hullCoords)
+          // coords = coords.concat(this.boundary.hullCoords)
         }
         this.delaunator = new Delaunator(coords);
         this.boundary.addPoints(coords, this.delaunator, 10);
+
         // this.pointInOrOut([1,1]);
       }
 
