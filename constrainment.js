@@ -26,11 +26,11 @@ export default class ConstrainoDelaunato {
         this.boundaries.push(new Boundary(coords, k))
       }
       this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, 10)
-      this.boundedDelaunatorr.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
+      this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
     }
 
     this.boundary = this.boundaries[this.boundaries.length - 1]
-    this.boundedDelaunator =  this.boundedDelaunators[this.boundedDelaunators.length - 1]
+    this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1]
   }
 
   setTrianglesInsideBound (boundary) {

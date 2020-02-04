@@ -1285,7 +1285,7 @@
 
         this.delaunator = new Delaunator(coords);
         this.boundaries = [];
-        this.boundedDelaunator = [];
+        this.boundedDelaunators = [];
 
         for (let boundary of boundaries) {
           if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
@@ -1297,10 +1297,11 @@
             this.boundaries.push(new BoundaryExtra(coords, k));
           }
           this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, 10);
-          this.boundedDelaunator.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]));
+          this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]));
         }
 
-        this.boundary = this.boundaries[this.boundaries.length - 1]; 
+        this.boundary = this.boundaries[this.boundaries.length - 1];
+        this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1];
       }
 
       setTrianglesInsideBound (boundary) {
