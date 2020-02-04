@@ -1,6 +1,6 @@
 import Delaunator from 'delaunator'
 import Boundary from './boundarywithflair'
-import { getEdges, maximumPointX } from './helpers'
+import { maximumPointX } from './helpers'
 
 export default class ConstrainoDelaunato {
   constructor (coords, boundary, k) {
@@ -24,7 +24,6 @@ export default class ConstrainoDelaunato {
 
     this.boundary.addPoints(coords, this.delaunator, 10)
     this.boundedDelaunator = this.setTrianglesInsideBound(this.boundary)
-    this.delaunator = this.boundedDelaunator
   }
 
   setTrianglesInsideBound (boundary) {
@@ -35,9 +34,9 @@ export default class ConstrainoDelaunato {
     let i = 0
     for (const e of index) {
       const point = { x: this.delaunator.coords[e], y: this.delaunator.coords[e + 1] }
-      if (point.x === 59 && point.y === 80) {
-        console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10))
-      }
+      // if (point.x === 59 && point.y === 80) {
+      //   console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10))
+      // }
       if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
         outIndex.push(i)
         coords.push(point.x, point.y)
@@ -47,7 +46,23 @@ export default class ConstrainoDelaunato {
 
     coords = coords.concat(boundary.subset(boundary.hull))
     const rv = new Delaunator(coords)
-    // TODO have to remove triangs from the convex bound created
+    const t = []
+    for (let e = 0; e < rv.triangles.length / 3; e++) {
+      const edgeIndex = e * 3
+
+      let xCoord = 0
+      let yCoord = 0
+      for (let r = 0; r < 3; r++) {
+        xCoord += rv.coords[2 * rv.triangles[r + edgeIndex]]
+        yCoord += rv.coords[2 * rv.triangles[r + edgeIndex] + 1]
+      }
+      const point = { x: xCoord / 3, y: yCoord / 3 }
+      if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
+        t.push( rv.triangles[edgeIndex], rv.triangles[edgeIndex + 1], rv.triangles[edgeIndex + 2])
+      }
+    }
+    rv.triangles = new rv.triangles.constructor(t)
+
     return rv
   }
 

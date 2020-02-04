@@ -34,22 +34,28 @@ function polarAngle (a, b) {
   return theta
 }
 
+
+/* eslint-enable */
+
 function nextHalfEdge (e) {
   return (e % 3 === 2) ? e - 2 : e + 1
 }
 
+/**
+ * getEdges
+ *
+ * @param {Object} delaunay Delaunator object
+ * @returns {Array} array of indices for edge points, so the indices for a coord array that are in order of triangulation
+ */
 export function getEdges (delaunay) {
-    const rv = []
-    for (let e = 0; e < delaunay.triangles.length; e++) {
-      if (e > delaunay.halfedges[e]) {
-        rv.push(2 * delaunay.triangles[e], 2 * delaunay.triangles[nextHalfEdge(e)])
-      }
+  const rv = []
+  for (let e = 0; e < delaunay.triangles.length; e++) {
+    if (e > delaunay.halfedges[e]) {
+      rv.push(2 * delaunay.triangles[e], 2 * delaunay.triangles[nextHalfEdge(e)])
     }
-    return rv
   }
-
-
-/* eslint-enable */
+  return rv
+}
 
 /**
  * intersect

@@ -320,9 +320,6 @@ export default class Boundary {
       const inters = intersect(p, l, true)
       if (isFinite(inters.x)) {
         const testCond = Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y
-        if (point[0] === 85 && point[1] === 132) {
-          console.log(last, testCond, inters, p, l)
-        }
         if (l.y1 - l.y0 > 0 && !testCond) {
           windingNum++
         } else if (l.y1 - l.y0 < 0 && !testCond) {

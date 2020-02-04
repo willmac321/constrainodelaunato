@@ -501,22 +501,28 @@
 
     var c;
 
+
+    /* eslint-enable */
+
     function nextHalfEdge (e) {
       return (e % 3 === 2) ? e - 2 : e + 1
     }
 
+    /**
+     * getEdges
+     *
+     * @param {Object} delaunay Delaunator object
+     * @returns {Array} array of indices for edge points, so the indices for a coord array that are in order of triangulation
+     */
     function getEdges (delaunay) {
-        const rv = [];
-        for (let e = 0; e < delaunay.triangles.length; e++) {
-          if (e > delaunay.halfedges[e]) {
-            rv.push(2 * delaunay.triangles[e], 2 * delaunay.triangles[nextHalfEdge(e)]);
-          }
+      const rv = [];
+      for (let e = 0; e < delaunay.triangles.length; e++) {
+        if (e > delaunay.halfedges[e]) {
+          rv.push(2 * delaunay.triangles[e], 2 * delaunay.triangles[nextHalfEdge(e)]);
         }
-        return rv
       }
-
-
-    /* eslint-enable */
+      return rv
+    }
 
     /**
      * intersect
@@ -1138,9 +1144,6 @@
           const inters = intersect(p, l, true);
           if (isFinite(inters.x)) {
             const testCond = Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y;
-            if (point[0] === 85 && point[1] === 132) {
-              console.log(last, testCond, inters, p, l);
-            }
             if (l.y1 - l.y0 > 0 && !testCond) {
               windingNum++;
             } else if (l.y1 - l.y0 < 0 && !testCond) {
@@ -1292,31 +1295,41 @@
 
         this.boundary.addPoints(coords, this.delaunator, 10);
         this.boundedDelaunator = this.setTrianglesInsideBound(this.boundary);
-        this.delaunator = this.boundedDelaunator;
       }
 
       setTrianglesInsideBound (boundary) {
         let coords = [];
-        const outIndex = [];
         const index = [...this.delaunator.coords.keys()].filter((i) => i % 2 === 0);
         const maxX = maximumPointX(this.delaunator.coords, index);
-        let i = 0;
         for (const e of index) {
           const point = { x: this.delaunator.coords[e], y: this.delaunator.coords[e + 1] };
-          if (point.x === 59 && point.y === 80) {
-            console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10));
-          }
+          // if (point.x === 59 && point.y === 80) {
+          //   console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10))
+          // }
           if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
-            outIndex.push(i);
             coords.push(point.x, point.y);
-            i += 2;
           }
         }
 
         coords = coords.concat(boundary.subset(boundary.hull));
         const rv = new Delaunator(coords);
-        rv.hull = outIndex;
-        // TODO have to remove triangs from the convex bound created
+        const t = [];
+        for (let e = 0; e < rv.triangles.length / 3; e++) {
+          const edgeIndex = e * 3;
+
+          let xCoord = 0;
+          let yCoord = 0;
+          for (let r = 0; r < 3; r++) {
+            xCoord += rv.coords[2 * rv.triangles[r + edgeIndex]];
+            yCoord += rv.coords[2 * rv.triangles[r + edgeIndex] + 1];
+          }
+          const point = { x: xCoord / 3, y: yCoord / 3 };
+          if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
+            t.push( rv.triangles[edgeIndex], rv.triangles[edgeIndex + 1], rv.triangles[edgeIndex + 2]);
+          }
+        }
+        rv.triangles = new rv.triangles.constructor(t);
+
         return rv
       }
 
