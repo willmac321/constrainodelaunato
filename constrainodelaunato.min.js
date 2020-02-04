@@ -1297,20 +1297,25 @@
 
       setTrianglesInsideBound (boundary) {
         let coords = [];
+        const outIndex = [];
         const index = [...this.delaunator.coords.keys()].filter((i) => i % 2 === 0);
         const maxX = maximumPointX(this.delaunator.coords, index);
+        let i = 0;
         for (const e of index) {
           const point = { x: this.delaunator.coords[e], y: this.delaunator.coords[e + 1] };
           if (point.x === 59 && point.y === 80) {
             console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10));
           }
           if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
+            outIndex.push(i);
             coords.push(point.x, point.y);
+            i += 2;
           }
         }
 
         coords = coords.concat(boundary.subset(boundary.hull));
         const rv = new Delaunator(coords);
+        rv.hull = outIndex;
         // TODO have to remove triangs from the convex bound created
         return rv
       }
