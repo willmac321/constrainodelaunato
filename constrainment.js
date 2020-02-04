@@ -3,7 +3,7 @@ import Boundary from './boundarywithflair'
 import { maximumPointX } from './helpers'
 
 export default class ConstrainoDelaunato {
-  constructor (coords, boundary, k) {
+  constructor (coords, k, ...boundaries) {
     // k is the k-nearest neighbor selection
     // if coords are 2D
     if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
@@ -11,19 +11,26 @@ export default class ConstrainoDelaunato {
     } else if (coords && Array.isArray(coords[0]) && coords[0].length !== 2) {
       return
     }
-    if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
-      boundary = boundary.flat()
-    }
-    if (boundary) {
-      this.boundary = new Boundary(boundary, k)
-    } else {
-      this.boundary = new Boundary(coords, k)
-    }
 
     this.delaunator = new Delaunator(coords)
+    this.boundaries = []
+    this.boundedDelaunators = []
 
-    this.boundary.addPoints(coords, this.delaunator, 10)
-    this.boundedDelaunator = this.setTrianglesInsideBound(this.boundary)
+    for (let boundary of boundaries) {
+      if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
+        boundary = boundary.flat()
+      }
+      if (boundary) {
+        this.boundaries.push(new Boundary(boundary, k))
+      } else {
+        this.boundaries.push(new Boundary(coords, k))
+      }
+      this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, 10)
+      this.boundedDelaunatorr.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
+    }
+
+    this.boundary = this.boundaries[this.boundaries.length - 1]
+    this.boundedDelaunator =  this.boundedDelaunators[this.boundedDelaunators.length - 1]
   }
 
   setTrianglesInsideBound (boundary) {
@@ -58,7 +65,7 @@ export default class ConstrainoDelaunato {
       }
       const point = { x: xCoord / 3, y: yCoord / 3 }
       if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
-        t.push( rv.triangles[edgeIndex], rv.triangles[edgeIndex + 1], rv.triangles[edgeIndex + 2])
+        t.push(rv.triangles[edgeIndex], rv.triangles[edgeIndex + 1], rv.triangles[edgeIndex + 2])
       }
     }
     rv.triangles = new rv.triangles.constructor(t)
