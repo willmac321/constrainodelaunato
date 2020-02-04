@@ -501,6 +501,21 @@
 
     var c;
 
+    function nextHalfEdge (e) {
+      return (e % 3 === 2) ? e - 2 : e + 1
+    }
+
+    function getEdges (delaunay) {
+        const rv = [];
+        for (let e = 0; e < delaunay.triangles.length; e++) {
+          if (e > delaunay.halfedges[e]) {
+            rv.push(2 * delaunay.triangles[e], 2 * delaunay.triangles[nextHalfEdge(e)]);
+          }
+        }
+        return rv
+      }
+
+
     /* eslint-enable */
 
     /**
@@ -823,12 +838,6 @@
         this.hull = this.findConcaveHull(k);
       }
 
-      testFunctions () {
-        this.pointInOrOut([this.center.x, this.center.y], this.index, this.minX.x - 10);
-        this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index, this.minX.x - 10);
-        this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.minX.x, this.minY.y]);
-      }
-
       findConcaveHull (k) {
         // alt index is sorted to minX value
         const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
@@ -1117,6 +1126,7 @@
         // console.log(this.ray)
         // lets use non-zero winding number rule
         let windingNum = 0;
+        let last = { x: Infinity, y: Infinity };
 
         for (let i = 0; i < index.length; i++) {
           const l = {
@@ -1127,11 +1137,16 @@
           };
           const inters = intersect(p, l, true);
           if (isFinite(inters.x)) {
-            if (l.y1 - l.y0 > 0) {
+            const testCond = Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y;
+            if (point[0] === 85 && point[1] === 132) {
+              console.log(last, testCond, inters, p, l);
+            }
+            if (l.y1 - l.y0 > 0 && !testCond) {
               windingNum++;
-            } else if (l.y1 - l.y0 < 0) {
+            } else if (l.y1 - l.y0 < 0 && !testCond) {
               windingNum--;
             }
+            last = { x: Math.round(inters.x * 1000000), y: Math.round(inters.y * 1000000) };
           }
         }
         return Math.abs(windingNum) !== 0
@@ -1190,37 +1205,22 @@
        */
       addPoints (parentArr, delaunator, dist) {
         this.k = 3;
-        const edges = this.getEdges(delaunator);
+        const edges = getEdges(delaunator);
         // get all intersecting lines to the hull line seg
         for (let p = 0; p < this.hull.length - 1; p++) {
           const h = this.subset([this.hull[p], this.hull[p + 1]]);
           const seg = { x0: h[0], y0: h[1], x1: h[2], y1: h[3] };
           const temp = this.getIntersectingLines(seg, edges, parentArr, dist).reverse();
-
           const ind = sortHeap(temp.map((m) => [m[m.length - 1].x, m[m.length - 1].y]).flat(), [...Array(temp.length).keys()].map((i) => i * 2), 'euclid', [seg.x0, seg.y0]);
-
           this.intersectingLineSegs.push(this.hull[p]);
           const c = this.coords.length;
           this.coords = this.coords.concat(temp.map((m) => [m[m.length - 1].x, m[m.length - 1].y]).flat());
           this.intersectingLineSegs = this.intersectingLineSegs.concat(ind.map((m) => m + c));
-
-          // put the coords in order of line seg
-          // for (const t of temp) {
-          //   const r = t.pop()
-          //   const c = this.coords.length
-          //   this.coords.push(r.x, r.y)
-          //   this.intersectingLineSegs.push(c)
-          // }
-          // temp.unshift(seg)
-          // pntAndItsArr.push(temp)
         }
-        // console.log(this.coords.length - this.origCoordsLen)
-        // console.log(this.intersectingLineSegs, this.coords)
-        // this.intersectingLineSegs = this.sortHeapAndClean(this.coords, this.intersectingLineSegs, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
         this.intersectingLineSegs.push(this.intersectingLineSegs[0]);
-        console.log(this.hull, this.intersectingLineSegs);
 
         this.hull = this.intersectingLineSegs;
+        this.clean(this.hull);
       }
 
       /**
@@ -1233,7 +1233,7 @@
        *
        * @return {Object} array of an array that contains each point pair index and the x, y coord for intersection format: [index0, index1, {x2, y2}]
        */
-      getIntersectingLines (lineSeg, indexArr, coords, dist) {
+      getIntersectingLines (lineSeg, indexArr, coords, dist, opt = null) {
         const pntAndItsArr = [];
         // iterate over point pairs
         for (let i = 0; i < indexArr.length; i += 2) {
@@ -1249,6 +1249,9 @@
             if (isFinite(its.x)) {
               // console.log(d, its, lineSeg, coordSeg, i)
               // this.cPoints.push(indexArr[i], indexArr[i + 1])
+              if (opt) {
+                opt([indexArr[i], indexArr[i + 1], its]);
+              }
               pntAndItsArr.push([indexArr[i], indexArr[i + 1], its]);
             }
           }
@@ -1256,17 +1259,7 @@
         return pntAndItsArr
       }
 
-      nextHalfEdge (e) { return (e % 3 === 2) ? e - 2 : e + 1 }
 
-      getEdges (delaunay) {
-        const rv = [];
-        for (let e = 0; e < delaunay.triangles.length; e++) {
-          if (e > delaunay.halfedges[e]) {
-            rv.push(2 * delaunay.triangles[e], 2 * delaunay.triangles[this.nextHalfEdge(e)]);
-          }
-        }
-        return rv
-      }
 
       get k () {
         return super.k
@@ -1291,12 +1284,35 @@
         }
         if (boundary) {
           this.boundary = new BoundaryExtra(boundary, k);
-          // coords = coords.concat(this.boundary.hullCoords)
+        } else {
+          this.boundary = new BoundaryExtra(coords, k);
         }
-        this.delaunator = new Delaunator(coords);
-        this.boundary.addPoints(coords, this.delaunator, 10);
 
-        // this.pointInOrOut([1,1]);
+        this.delaunator = new Delaunator(coords);
+
+        this.boundary.addPoints(coords, this.delaunator, 10);
+        this.boundedDelaunator = this.setTrianglesInsideBound(this.boundary);
+        this.delaunator = this.boundedDelaunator;
+      }
+
+      setTrianglesInsideBound (boundary) {
+        let coords = [];
+        const index = [...this.delaunator.coords.keys()].filter((i) => i % 2 === 0);
+        const maxX = maximumPointX(this.delaunator.coords, index);
+        for (const e of index) {
+          const point = { x: this.delaunator.coords[e], y: this.delaunator.coords[e + 1] };
+          if (point.x === 59 && point.y === 80) {
+            console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10));
+          }
+          if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
+            coords.push(point.x, point.y);
+          }
+        }
+
+        coords = coords.concat(boundary.subset(boundary.hull));
+        const rv = new Delaunator(coords);
+        // TODO have to remove triangs from the convex bound created
+        return rv
       }
 
       update (point) {

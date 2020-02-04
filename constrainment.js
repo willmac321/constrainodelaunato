@@ -1,5 +1,6 @@
 import Delaunator from 'delaunator'
 import Boundary from './boundarywithflair'
+import { getEdges, maximumPointX } from './helpers'
 
 export default class ConstrainoDelaunato {
   constructor (coords, boundary, k) {
@@ -15,12 +16,39 @@ export default class ConstrainoDelaunato {
     }
     if (boundary) {
       this.boundary = new Boundary(boundary, k)
-      // coords = coords.concat(this.boundary.hullCoords)
+    } else {
+      this.boundary = new Boundary(coords, k)
     }
-    this.delaunator = new Delaunator(coords)
-    this.boundary.addPoints(coords, this.delaunator, 10)
 
-    // this.pointInOrOut([1,1]);
+    this.delaunator = new Delaunator(coords)
+
+    this.boundary.addPoints(coords, this.delaunator, 10)
+    this.boundedDelaunator = this.setTrianglesInsideBound(this.boundary)
+    this.delaunator = this.boundedDelaunator
+  }
+
+  setTrianglesInsideBound (boundary) {
+    let coords = []
+    const outIndex = []
+    const index = [...this.delaunator.coords.keys()].filter((i) => i % 2 === 0)
+    const maxX = maximumPointX(this.delaunator.coords, index)
+    let i = 0
+    for (const e of index) {
+      const point = { x: this.delaunator.coords[e], y: this.delaunator.coords[e + 1] }
+      if (point.x === 59 && point.y === 80) {
+        console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10))
+      }
+      if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
+        outIndex.push(i)
+        coords.push(point.x, point.y)
+        i += 2
+      }
+    }
+
+    coords = coords.concat(boundary.subset(boundary.hull))
+    const rv = new Delaunator(coords)
+    // TODO have to remove triangs from the convex bound created
+    return rv
   }
 
   update (point) {

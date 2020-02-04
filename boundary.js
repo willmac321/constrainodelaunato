@@ -20,12 +20,6 @@ export default class Boundary {
     this.hull = this.findConcaveHull(k)
   }
 
-  testFunctions () {
-    this.pointInOrOut([this.center.x, this.center.y], this.index, this.minX.x - 10)
-    this.pointInOrOut([this.minX.x + 1000, this.minX.y], this.index, this.minX.x - 10)
-    this.index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minY.x, this.minY.y], [this.minX.x, this.minY.y])
-  }
-
   findConcaveHull (k) {
     // alt index is sorted to minX value
     const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
@@ -314,6 +308,7 @@ export default class Boundary {
     // console.log(this.ray)
     // lets use non-zero winding number rule
     let windingNum = 0
+    let last = { x: Infinity, y: Infinity }
 
     for (let i = 0; i < index.length; i++) {
       const l = {
@@ -324,11 +319,16 @@ export default class Boundary {
       }
       const inters = intersect(p, l, true)
       if (isFinite(inters.x)) {
-        if (l.y1 - l.y0 > 0) {
+        const testCond = Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y
+        if (point[0] === 85 && point[1] === 132) {
+          console.log(last, testCond, inters, p, l)
+        }
+        if (l.y1 - l.y0 > 0 && !testCond) {
           windingNum++
-        } else if (l.y1 - l.y0 < 0) {
+        } else if (l.y1 - l.y0 < 0 && !testCond) {
           windingNum--
         }
+        last = { x: Math.round(inters.x * 1000000), y: Math.round(inters.y * 1000000) }
       }
     }
     return Math.abs(windingNum) !== 0

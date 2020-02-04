@@ -2,10 +2,6 @@ var c
 
 // Unused functions
 /* eslint-disable */
-function nextHalfEdge (e) {
-  return (e % 3 === 2) ? e - 2 : e + 1
-}
-
 function builtInSort (point, arr) {
   return arr.sort((a, b) => {
     // return manhattenDist(point, a) - manhattenDist(point, b)
@@ -37,6 +33,21 @@ function polarAngle (a, b) {
   theta = theta > 0 ? theta : 360 + theta
   return theta
 }
+
+function nextHalfEdge (e) {
+  return (e % 3 === 2) ? e - 2 : e + 1
+}
+
+export function getEdges (delaunay) {
+    const rv = []
+    for (let e = 0; e < delaunay.triangles.length; e++) {
+      if (e > delaunay.halfedges[e]) {
+        rv.push(2 * delaunay.triangles[e], 2 * delaunay.triangles[nextHalfEdge(e)])
+      }
+    }
+    return rv
+  }
+
 
 /* eslint-enable */
 
