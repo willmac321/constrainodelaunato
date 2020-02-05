@@ -52,86 +52,88 @@ console.log(tarantallegra.boundedDelaunators[0])
 - The bounded delaunator objects for the holes are useable as delaunay objects
 
 ### API
-## Members
+<a name="ConstrainoDelaunato"></a>
 
-<dl>
-<dt><a href="#coords2D">coords2D</a> ⇒ <code>Array</code></dt>
-<dd><p>coords2D</p>
-</dd>
-<dt><a href="#coords">coords</a> ⇒ <code>Array</code></dt>
-<dd><p>coords</p>
-</dd>
-<dt><a href="#triangles">triangles</a> ⇒ <code>Array</code></dt>
-<dd><p>triangles</p>
-</dd>
-<dt><a href="#hull">hull</a> ⇒ <code>Array</code></dt>
-<dd><p>hull</p>
-</dd>
-</dl>
+## ConstrainoDelaunato
+ConstrainoDelaunato
 
-## Functions
+**Kind**: global class  
 
-<dl>
-<dt><a href="#setTrianglesInsideBound">setTrianglesInsideBound(boundary)</a></dt>
-<dd><p>setTrianglesInsideBound</p>
-<p>Function used to clip coords to inside of boundary or hole</p>
-</dd>
-<dt><a href="#update">update(point)</a></dt>
-<dd><p>update</p>
-</dd>
-</dl>
+* [ConstrainoDelaunato](#ConstrainoDelaunato)
+    * [new ConstrainoDelaunato(coords, k)](#new_ConstrainoDelaunato_new)
+    * [.coords2D](#ConstrainoDelaunato+coords2D) ⇒ <code>Array</code>
+    * [.coords](#ConstrainoDelaunato+coords) ⇒ <code>Array</code>
+    * [.triangles](#ConstrainoDelaunato+triangles) ⇒ <code>Array</code>
+    * [.hull](#ConstrainoDelaunato+hull) ⇒ <code>Array</code>
+    * [.setTrianglesInsideBound(boundary)](#ConstrainoDelaunato+setTrianglesInsideBound)
+    * [.update(point)](#ConstrainoDelaunato+update)
 
-<a name="coords2D"></a>
+<a name="new_ConstrainoDelaunato_new"></a>
 
-## coords2D ⇒ <code>Array</code>
+### new ConstrainoDelaunato(coords, k)
+constructor
+
+creates a delaunator object for the larger coord point cloud, and any smalle concave boundaries and delaunator objects for holes/boundaries supplied
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| coords | <code>Array</code> | Coordinate cloud, can be 2D or 1D, prefer 1D of type [x0, y0, x1, y1, ... xN, yN] |
+| k | <code>Integer</code> | lower bound for point selection in k grouping - minimum possible value is 3 - you have to make a polygon |
+| ...boundaries | <code>Array</code> | Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects |
+
+<a name="ConstrainoDelaunato+coords2D"></a>
+
+### constrainoDelaunato.coords2D ⇒ <code>Array</code>
 coords2D
 
-**Kind**: global variable  
+**Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
 **Returns**: <code>Array</code> - 2D coordinate array  
-<a name="coords"></a>
+<a name="ConstrainoDelaunato+coords"></a>
 
-## coords ⇒ <code>Array</code>
+### constrainoDelaunato.coords ⇒ <code>Array</code>
 coords
 
-**Kind**: global variable  
+**Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
 **Returns**: <code>Array</code> - 1D coordinate array  
-<a name="triangles"></a>
+<a name="ConstrainoDelaunato+triangles"></a>
 
-## triangles ⇒ <code>Array</code>
+### constrainoDelaunato.triangles ⇒ <code>Array</code>
 triangles
 
-**Kind**: global variable  
+**Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
 **Returns**: <code>Array</code> - Index array of delaunator triangles  
-<a name="hull"></a>
+<a name="ConstrainoDelaunato+hull"></a>
 
-## hull ⇒ <code>Array</code>
+### constrainoDelaunato.hull ⇒ <code>Array</code>
 hull
 
-**Kind**: global variable  
+**Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
 **Returns**: <code>Array</code> - Array of hull indices  
-<a name="setTrianglesInsideBound"></a>
+<a name="ConstrainoDelaunato+setTrianglesInsideBound"></a>
 
-## setTrianglesInsideBound(boundary)
+### constrainoDelaunato.setTrianglesInsideBound(boundary)
 setTrianglesInsideBound
 
 Function used to clip coords to inside of boundary or hole
 
-**Kind**: global function  
+**Kind**: instance method of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | boundary | <code>BoundaryExtra</code> | boundary extra object |
 
-<a name="update"></a>
+<a name="ConstrainoDelaunato+update"></a>
 
-## update(point)
+### constrainoDelaunato.update(point)
 update
 
-**Kind**: global function  
+**Kind**: instance method of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | point | <code>Array</code> | x and y coord of point to add the delaunator object |
+
 
 
 #### Everything below is done automatically - but just in case...

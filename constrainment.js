@@ -4,10 +4,16 @@ import { maximumPointX } from './helpers'
 
 /**
  * ConstrainoDelaunato
+ *
+ * @class
+ * @classdesc ConstrainoDelaunato
  */
-export default class ConstrainoDelaunato {
+class ConstrainoDelaunato {
   /**
    * constructor
+   *
+   * creates a delaunator object for the larger coord point cloud, and any smalle concave boundaries and delaunator objects for holes/boundaries supplied
+   * @constructor
    *
    * @param {Array} coords Coordinate cloud, can be 2D or 1D, prefer 1D of type [x0, y0, x1, y1, ... xN, yN]
    * @param {Integer} k lower bound for point selection in k grouping - minimum possible value is 3 - you have to make a polygon
