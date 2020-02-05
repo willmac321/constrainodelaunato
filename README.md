@@ -27,7 +27,7 @@ in order to create a concave hull around a point cloud.
 
 ## Run
 
-### For Dev:
+### For Dev - if cloned from git:
 - uses rollup for minimizing
 ```bash
 npm install [package name]
