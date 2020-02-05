@@ -1,6 +1,6 @@
 {
   "name": "constrainodelaunato",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Constrained Delaunay triangulator/hole triangulator built off of the delaunator package.",
   "main": "constrainment.js",
   "module": "main.js",
