@@ -7,11 +7,11 @@ Based on/using delaunator as basis for delaunay triangulations, this module uses
 [[CONCAVE HULL: A K-NEAREST NEIGHBOURS APPROACH FOR THE COMPUTATION OF THE REGION OCCUPIED BY A SET OF POINTS](https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf)],
 in order to create a concave hull around a point cloud.
 
-- Additionally, the module takes in othe point sets as additional optional arguments.  When these are supplied, the a seperate concave boundary is created for the boundary points.  
+- Additionally, the module takes in point sets as additional optional arguments.  When these are supplied, the a seperate concave boundary is created for the boundary points.  
     - These points also have their own triagulation created by taking available points from the source data and clipping that area out to match the created concave boundary.
 
 ## Example 
-- A delaunay triangulation with a new set of points overlayed in black:
+- A delaunay triangulation with a new set of points overlayed in black - the black line is to help with visibility of the points, the points are at vertices of the polygon:
 <div style="text-align:center"><img src="https://gitlab.com/willmac321/constrainodelaunato/-/raw/master/static/d1.png" alt="Constraino Delaunato Ex 1" width = "400"/></div>
 
 - The same set of points but with a concave boundary created around it in blue, the arrows indicate a ccw direction.  (CCW from the origin (0,0) which is at the top left point of this image)  The concave algorithm follows the left hand rule to determine the most suitable next point in the k grouping.  
