@@ -21,7 +21,7 @@ in order to create a concave hull around a point cloud.
 
 - Finally the concave boundary of the inner points are used to clip the original points into a seperate delaunay object.  This object then has any triangle outside of the new concave boundary removed.  It is done in this order to in order to minimize the size of the initial delaunay object and also to include the boudnary intersection points in the triangulation calculation.  The new triangulation is shown overlayed in blue.
 
-<img src="/assets/d3.png" alt="Constraino Delaunato Ex 3" width = "400"/>
+<img src="static/d3.png" alt="Constraino Delaunato Ex 3" width = "400"/>
 
 ## Run
 
