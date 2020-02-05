@@ -7,4 +7,5 @@ node_modules/
 *.swp
 .vimrc*
 package-lock.json
-
+main.html
+convertJsontoInt.js
