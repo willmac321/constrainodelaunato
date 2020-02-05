@@ -72,8 +72,6 @@ export default class BoundaryExtra extends Boundary {
     return pntAndItsArr
   }
 
-
-
   get k () {
     return super.k
   }

@@ -1262,8 +1262,6 @@
         return pntAndItsArr
       }
 
-
-
       get k () {
         return super.k
       }
