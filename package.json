@@ -2,7 +2,7 @@
   "name": "constrainodelaunato",
   "version": "1.0.2",
   "description": "Constrained Delaunay triangulator/hole triangulator built off of the delaunator package.",
-  "main": "constrainment.js",
+  "main": "constrainodelaunato.js",
   "module": "main.js",
   "jsdelivr": "constrainodelaunato.min.js",
   "unpkg": "constrainodelaunato.min.js",
@@ -40,10 +40,6 @@
     "dev": "browser-sync start --server --files './*.js' './main.html' --index \"main.html\" & rollup -cw"
   },
   "files": [
-    "constrainment.js",
-    "boundary.js",
-    "boundarywithflair.js",
-    "helpers.js",
     "constrainodelaunato.js",
     "constrainodelaunato.min.js"
   ],
