@@ -1,5 +1,5 @@
 import Delaunator from 'delaunator'
-import Boundary from './boundarywithflair'
+import BoundaryExtra from './boundarywithflair'
 import { maximumPointX } from './helpers'
 
 /**
@@ -17,9 +17,10 @@ export default class ConstrainoDelaunato {
    *
    * @param {Array} coords Coordinate cloud, can be 2D or 1D, prefer 1D of type [x0, y0, x1, y1, ... xN, yN]
    * @param {Integer} k lower bound for point selection in k grouping - minimum possible value is 3 - you have to make a polygon
+   * @param {Integer} dist - distance for adding points along boundary, distance between line segment perpindicular to either point of triangle segment
    * @param {Array} ...boundaries Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects
    */
-  constructor (coords, k, ...boundaries) {
+  constructor (coords, k, dist, ...boundaries) {
     // k is the k-nearest neighbor selection
     // if coords are 2D
     if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
@@ -31,22 +32,33 @@ export default class ConstrainoDelaunato {
     this.delaunator = new Delaunator(coords)
     this.boundaries = []
     this.boundedDelaunators = []
-
-    for (let boundary of boundaries) {
-      if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
-        boundary = boundary.flat()
-      }
-      if (boundary) {
-        this.boundaries.push(new Boundary(boundary, k))
-      } else {
-        this.boundaries.push(new Boundary(coords, k))
-      }
-      this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, 10)
-      this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
+    let boundary = boundaries[0]
+    if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
+      boundary = boundary.flat()
     }
+    this.boundaries.push(new BoundaryExtra(boundary, k))
+    this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
+    this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
 
     this.boundary = this.boundaries[this.boundaries.length - 1]
     this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1]
+
+    // for (let boundary of boundaries) {
+    //   if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
+    //     boundary = boundary.flat()
+    //   }
+    //   this.boundaries.push(new BoundaryExtra(boundary, k))
+    //   console.log(this.boundaries)
+    //   this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
+    //   this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
+    // }
+    //
+    // this.boundaries.push(new BoundaryExtra(coords, k))
+    // this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
+    // this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
+    //
+    // this.boundary = this.boundaries[this.boundaries.length - 1]
+    // this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1]
   }
 
   /**
@@ -64,9 +76,6 @@ export default class ConstrainoDelaunato {
     let i = 0
     for (const e of index) {
       const point = { x: this.delaunator.coords[e], y: this.delaunator.coords[e + 1] }
-      // if (point.x === 59 && point.y === 80) {
-      //   console.log(boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10))
-      // }
       if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
         outIndex.push(i)
         coords.push(point.x, point.y)
