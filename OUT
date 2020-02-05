@@ -1,0 +1,81 @@
+## Members
+
+<dl>
+<dt><a href="#coords2D">coords2D</a> ⇒ <code>Array</code></dt>
+<dd><p>coords2D</p>
+</dd>
+<dt><a href="#coords">coords</a> ⇒ <code>Array</code></dt>
+<dd><p>coords</p>
+</dd>
+<dt><a href="#triangles">triangles</a> ⇒ <code>Array</code></dt>
+<dd><p>triangles</p>
+</dd>
+<dt><a href="#hull">hull</a> ⇒ <code>Array</code></dt>
+<dd><p>hull</p>
+</dd>
+</dl>
+
+## Functions
+
+<dl>
+<dt><a href="#setTrianglesInsideBound">setTrianglesInsideBound(boundary)</a></dt>
+<dd><p>setTrianglesInsideBound</p>
+<p>Function used to clip coords to inside of boundary or hole</p>
+</dd>
+<dt><a href="#update">update(point)</a></dt>
+<dd><p>update</p>
+</dd>
+</dl>
+
+<a name="coords2D"></a>
+
+## coords2D ⇒ <code>Array</code>
+coords2D
+
+**Kind**: global variable  
+**Returns**: <code>Array</code> - 2D coordinate array  
+<a name="coords"></a>
+
+## coords ⇒ <code>Array</code>
+coords
+
+**Kind**: global variable  
+**Returns**: <code>Array</code> - 1D coordinate array  
+<a name="triangles"></a>
+
+## triangles ⇒ <code>Array</code>
+triangles
+
+**Kind**: global variable  
+**Returns**: <code>Array</code> - Index array of delaunator triangles  
+<a name="hull"></a>
+
+## hull ⇒ <code>Array</code>
+hull
+
+**Kind**: global variable  
+**Returns**: <code>Array</code> - Array of hull indices  
+<a name="setTrianglesInsideBound"></a>
+
+## setTrianglesInsideBound(boundary)
+setTrianglesInsideBound
+
+Function used to clip coords to inside of boundary or hole
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| boundary | <code>BoundaryExtra</code> | boundary extra object |
+
+<a name="update"></a>
+
+## update(point)
+update
+
+**Kind**: global function  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| point | <code>Array</code> | x and y coord of point to add the delaunator object |
+
