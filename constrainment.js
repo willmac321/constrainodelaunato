@@ -32,33 +32,20 @@ export default class ConstrainoDelaunato {
     this.delaunator = new Delaunator(coords)
     this.boundaries = []
     this.boundedDelaunators = []
-    let boundary = boundaries[0]
-    if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
-      boundary = boundary.flat()
+
+    for (let boundary of boundaries) {
+      if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
+        boundary = boundary.flat()
+      }
+      this.boundaries.push(new BoundaryExtra(boundary, k))
+      this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
+      this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
     }
-    this.boundaries.push(new BoundaryExtra(boundary, k))
+    this.boundaries.push(new BoundaryExtra(coords, k))
     this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
     this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
-
     this.boundary = this.boundaries[this.boundaries.length - 1]
     this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1]
-
-    // for (let boundary of boundaries) {
-    //   if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
-    //     boundary = boundary.flat()
-    //   }
-    //   this.boundaries.push(new BoundaryExtra(boundary, k))
-    //   console.log(this.boundaries)
-    //   this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
-    //   this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
-    // }
-    //
-    // this.boundaries.push(new BoundaryExtra(coords, k))
-    // this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
-    // this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
-    //
-    // this.boundary = this.boundaries[this.boundaries.length - 1]
-    // this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1]
   }
 
   /**
