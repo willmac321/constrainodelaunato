@@ -2,7 +2,17 @@ import Delaunator from 'delaunator'
 import Boundary from './boundarywithflair'
 import { maximumPointX } from './helpers'
 
+/**
+ * ConstrainoDelaunato
+ */
 export default class ConstrainoDelaunato {
+  /**
+   * constructor
+   *
+   * @param {Array} coords Coordinate cloud, can be 2D or 1D, prefer 1D of type [x0, y0, x1, y1, ... xN, yN]
+   * @param {Integer} k lower bound for point selection in k grouping - minimum possible value is 3 - you have to make a polygon
+   * @param {Array} ...boundaries Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects
+   */
   constructor (coords, k, ...boundaries) {
     // k is the k-nearest neighbor selection
     // if coords are 2D
@@ -33,6 +43,13 @@ export default class ConstrainoDelaunato {
     this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1]
   }
 
+  /**
+   * setTrianglesInsideBound
+   *
+   * Function used to clip coords to inside of boundary or hole
+   *
+   * @param {BoundaryExtra} boundary boundary extra object
+   */
   setTrianglesInsideBound (boundary) {
     let coords = []
     const outIndex = []
@@ -73,6 +90,11 @@ export default class ConstrainoDelaunato {
     return rv
   }
 
+  /**
+   * update
+   *
+   * @param {Array} point x and y coord of point to add the delaunator object
+   */
   update (point) {
     const c = this.coords
     for (const p of point.flat()) {
@@ -81,6 +103,11 @@ export default class ConstrainoDelaunato {
     this.delaunator = new Delaunator(c)
   }
 
+  /**
+   * coords2D
+   *
+   * @returns {Array} 2D coordinate array
+   */
   get coords2D () {
     const c2D = []
     const c1D = this.coords
@@ -90,23 +117,30 @@ export default class ConstrainoDelaunato {
     return c2D
   }
 
+  /**
+   * coords
+   *
+   * @returns {Array} 1D coordinate array
+   */
   get coords () {
     return this.delaunator.coords
   }
 
+  /**
+   * triangles
+   *
+   * @returns {Array} Index array of delaunator triangles
+   */
   get triangles () {
     return this.delaunator.triangles
   }
 
-  get concaveHullCoords () {
-    return this.boundary.hullCoords
-  }
-
+  /**
+   * hull
+   *
+   * @returns {Array} Array of hull indices
+   */
   get hull () {
     return this.delaunator.hull
-  }
-
-  get bound () {
-    return this.boundary
   }
 }

@@ -13,13 +13,18 @@ export default class Boundary {
     this.minX = minimumPointX(this.coords, this.index)
     this.maxX = maximumPointX(this.coords, this.index)
 
-    // TODO remove this
     this.cPoints = []
 
     this.ray = null
     this.hull = this.findConcaveHull(k)
   }
 
+  /**
+   * findConcaveHull
+   *
+   * @param {Integer} k Starting point cloud count for points being used for selection
+   * @returns {Array} Array of indices of X values for the sorted concave hull
+   */
   findConcaveHull (k) {
     // alt index is sorted to minX value
     const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
@@ -31,7 +36,6 @@ export default class Boundary {
 
   concave (index, k) {
     // k nearest neighbor babbbbyyyy
-    // https://towardsdatascience.com/the-concave-hull-c649795c0f0f
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
@@ -177,7 +181,6 @@ export default class Boundary {
     // cant use max or min value for first point, the reference point needs to be the last point in the hull in order to get the angle sorting right
     const rv = sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr).slice()
     // if two points are on the same line eq as current point, currently the further one is considered a 'closer angle', perform swap of these coords below
-    //    console.log(`current slope ${slope(currentPointArr, [this.coords[rv[0]], this.coords[rv[0] + 1]])} for ${currentPointArr} and ${[this.coords[rv[0]], this.coords[rv[0] + 1]]}`)
 
     let lastSlope
     let lastDist
@@ -191,11 +194,6 @@ export default class Boundary {
       const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]]
       const newSlope = slope(lastPoint, newPoint)
       const newDist = euclid(currentPointArr, newPoint)
-      // console.log(`point ${k} at slope ${slope(lastPoint, newPoint)} for ${lastPoint} and ${newPoint}`)
-      // console.log(`new point ${dotProduct(lastPoint, newPoint)}`)
-      //        if ((this.ray.x0 === 153 && this.ray.y0 === 97)) {
-      //          console.log(this.ray, newSlope, lastSlope, lastDist, newDist, this.subset(rv))
-      //        }
       if (lastSlope && lastDist && (Math.abs(newSlope) === Math.abs(lastSlope) || (newSlope === Infinity && lastSlope === -Infinity)) && newDist < lastDist) {
         // flipflop the two points in array order if the slopes are the same
         // sort by euclid instead of straight swap
@@ -208,12 +206,10 @@ export default class Boundary {
       lastSlope = slope(lastPoint, newPoint)
     }
 
-    return rv // sortHeap(this.coords, kNearestPoints, 'polar', lastPoint, currentPointArr )
+    return rv
   }
 
   nearestPoints (index, cP, kk) {
-    // console.log(cP)
-    // console.log([this.coords[cP], this.coords[cP + 1]])
     const currentPoint = [this.coords[cP], this.coords[cP + 1]]
     index = sortHeap(this.coords.slice(), index.slice(), 'euclid', currentPoint)
     const rv = []
@@ -237,16 +233,13 @@ export default class Boundary {
   }
 
   sortHeapAndClean (arr, ind, criteria, minPoint, centerPoint) {
-    // console.log(this.index, this.coords2D)
-  //  console.log(minPoint, centerPoint)
     ind = sortHeap(arr.slice(), ind.slice(), criteria, minPoint, centerPoint)
-    // console.log('heap clean res\n', arr, ind)
     ind = this.clean(ind)
     return ind
   }
 
   clean (index) {
-    // TODO there has to be a better way to do this
+    // there has to be a better way to do this
     // On^2  urrrgh
     const itRem = index.length
 
@@ -305,7 +298,6 @@ export default class Boundary {
       x0: point[0], y0: point[1], x1: dir, y1: point[1]
     }
     this.ray = p
-    // console.log(this.ray)
     // lets use non-zero winding number rule
     let windingNum = 0
     let last = { x: Infinity, y: Infinity }
