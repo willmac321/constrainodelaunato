@@ -12,17 +12,17 @@ in order to create a concave hull around a point cloud.
 
 ## Example 
 - A delaunay triangulation with a new set of points overlayed in black:
-<div style="text-align:center"><img src="/assets/d1.png" alt="Constraino Delaunato Ex 1" width = "400"/></div>
+<div style="text-align:center"><img src="/static/d1.png" alt="Constraino Delaunato Ex 1" width = "400"/></div>
 
 - The same set of points but with a concave boundary created around it in blue, the arrows indicate a ccw direction.  (CCW from the origin (0,0) which is at the top left point of this image)  The concave algorithm follows the left hand rule to determine the most suitable next point in the k grouping.  
     - At this point, additional points are added along the boundary for intersections with the main triangulation.  This follows a minimum distance logic, where the points are not considered for an intersection with the boundary unless one of the points perpindicular line intersects the boundary and is less than or equal to that minimum distance from that intersection. [![Further Details](https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line)]
 <div style="text-align:center">
-<img src="/assets/d2.png" alt="Constraino Delaunato Ex 2" width = "400"/>
+<img src="/static/d2.png" alt="Constraino Delaunato Ex 2" width = "400"/>
 </div>
 
 - Finally the concave boundary of the inner points are used to clip the original points into a seperate delaunay object.  This object then has any triangle outside of the new concave boundary removed.  It is done in this order to in order to minimize the size of the initial delaunay object and also to include the boudnary intersection points in the triangulation calculation.  The new triangulation is shown overlayed in blue.
 <div style="text-align:center">
-<img src="/assets/d3.png" alt="Constraino Delaunato Ex 3" width = "400"/>
+<img src="/static/d3.png" alt="Constraino Delaunato Ex 3" width = "400"/>
 </div>
 
 ## Run

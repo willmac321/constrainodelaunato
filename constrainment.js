@@ -8,7 +8,7 @@ import { maximumPointX } from './helpers'
  * @class
  * @classdesc ConstrainoDelaunato
  */
-class ConstrainoDelaunato {
+export default class ConstrainoDelaunato {
   /**
    * constructor
    *
