@@ -110,7 +110,9 @@ export function dotProduct (a, b) {
 export function slope (a, b) {
   const p = { x: a[0], y: a[1] }
   const o = { x: b[0], y: b[1] }
-  return (p.y - o.y) / (p.x - o.x)
+  const rv = (p.y - o.y) / (p.x - o.x)
+
+  return rv
 }
 
 function compareIntersect (a, b) {

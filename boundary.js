@@ -39,7 +39,7 @@ export default class Boundary {
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
-    const stopVal = Infinity // 76 // Infinity // and beyond
+    const stopVal = Infinity // 88 // 86 // Infinity // 76 // Infinity // and beyond
     const oldIndex = index.slice()
     // console.log('new k', k)
     if (index.length < 3) {
@@ -68,6 +68,7 @@ export default class Boundary {
     index.splice(firstPoint.i, 1)
     while ((currentPoint !== firstPoint.coord || step === 1) && (index.length > 0)) {
       counter++
+
       if (step === 4) {
         index.push(firstPoint.coord)
       }
@@ -113,10 +114,6 @@ export default class Boundary {
           if (isFinite(ints.x) && !endpointsMatch && !isClose) {
             its = true
           }
-          // if (counter > 269) {
-          //   console.log(l, p, ints, isFinite(ints.x), !endpointsMatch, cPoints[i + 1], firstPoint)
-          //   console.log(its)
-          // }
           j++
         }
         i++
@@ -125,18 +122,12 @@ export default class Boundary {
       // this.cPoints.splice(i, 1)
 
       if (its) {
-        // console.log('intersection found at k ', k, its)
-        // if (kk + 1 === 12) {
-        //   console.log(counter)
-        //   return hull
-        // }
         return this.concave(oldIndex, ++kk)
       }
       currentPoint = cPoints[i]
       hull.push(currentPoint)
 
       if (counter > stopVal) {
-        // console.log('test', [this.coords[currentPoint], this.coords[currentPoint + 1]], this.subset(cPoints))
         return hull // .concat(cPoints)
       }
       index.splice(index.indexOf(currentPoint), 1)
@@ -147,25 +138,15 @@ export default class Boundary {
       allInside = this.pointInOrOut(
         [this.coords[i], this.coords[i + 1]],
         hull, this.maxX.x + 10)
-      if (!allInside) {
-        break
-      }
     }
     if (!allInside) {
-      // console.log('Another time round')
-      //  if (kk + 1 === 11) {
-      //    console.log(counter)
-      //    return hull
-      //  }
       return this.concave(oldIndex, ++kk)
     }
-    // console.log('made it out')
     this.k = kk
     return hull
   }
 
   sortByAngle (kNearestPoints, currentPoint, lastPoint) {
-    // const lastPointIndex = lastPoint
     if (!lastPoint || lastPoint === currentPoint) {
       lastPoint = [this.maxX.x + 10, this.coords[currentPoint + 1]]
     } else {
@@ -194,7 +175,13 @@ export default class Boundary {
       const newPoint = [this.coords[rv[k]], this.coords[rv[k] + 1]]
       const newSlope = slope(lastPoint, newPoint)
       const newDist = euclid(currentPointArr, newPoint)
-      if (lastSlope && lastDist && (Math.abs(newSlope) === Math.abs(lastSlope) || (newSlope === Infinity && lastSlope === -Infinity)) && newDist < lastDist) {
+
+      // if (Math.floor(currentPointArr[0]) === 196718 && Math.floor(currentPointArr[1]) === 751526) {
+      //   console.log(rv.slice(), lastSlope, lastDist, newSlope, newDist, lastDist, (Math.abs(newSlope) === Math.abs(lastSlope)))
+      //   console.log((!isNaN(lastSlope) && !isNaN(lastDist) && (Math.abs(newSlope) === Math.abs(lastSlope) || (newSlope === Infinity && lastSlope === -Infinity)) && newDist < lastDist))
+      // }
+
+      if (!isNaN(lastSlope) && !isNaN(lastDist) && (Math.abs(newSlope) === Math.abs(lastSlope) || (newSlope === Infinity && lastSlope === -Infinity)) && newDist < lastDist) {
         // flipflop the two points in array order if the slopes are the same
         // sort by euclid instead of straight swap
         swap(rv, k, k - 1)
@@ -214,12 +201,17 @@ export default class Boundary {
     index = sortHeap(this.coords.slice(), index.slice(), 'euclid', currentPoint)
     const rv = []
     let lastSlope
+    let lastDist
     kk = Math.min(kk, index.length - 1)
     let i = 0
     let c = 0
     while (c < kk) {
       const newSlope = slope(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]])
-      if (!lastSlope || newSlope !== lastSlope) {
+      const newDist = euclid(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]])
+
+      if (newDist === lastDist) {
+        rv.push(index[i])
+      } else if (c === 0 || newSlope !== lastSlope) {
         rv.push(index[i])
         c++
       }
@@ -228,6 +220,7 @@ export default class Boundary {
         return rv
       }
       lastSlope = newSlope
+      lastDist = newDist
     }
     return rv
   }
@@ -276,7 +269,7 @@ export default class Boundary {
       }
       if (pass) { newIndex.push(index[i]) }
     }
-    console.log('items removed: ' + (itRem - newIndex.length))
+    // console.log('items removed: ' + (itRem - newIndex.length))
     return newIndex
   }
 

@@ -4,7 +4,8 @@ import { distLineAndPoint, getEdges, intersect, sortHeap } from './helpers'
 export default class BoundaryExtra extends Boundary {
   constructor (arr, k = 3) {
     super(arr, k)
-    this.cPoints = []
+    //TODO
+    // this.cPoints = []
     this.origCoordsLen = arr.length
     this.intersectingLineSegs = []
   }
@@ -17,7 +18,7 @@ export default class BoundaryExtra extends Boundary {
    * @param {Integer} dist Max distance to point to trigger interpolation, only one of two points in line segment has to meet this criteria
    */
   addPoints (parentArr, delaunator, dist) {
-    console.log(parentArr, delaunator)
+    // console.log(parentArr, delaunator)
     this.k = 3
     const edges = getEdges(delaunator)
     // get all intersecting lines to the hull line seg

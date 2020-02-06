@@ -19,4 +19,17 @@ function dothething (jso) {
   console.log(`file saved as temp${jso}`)
 }
 
-dothething(process.argv[2])
+function dothething2 (jso) {
+  const raw = fs.readFileSync(jso)
+  const obj = JSON.parse(raw)
+  const o = []
+
+  for (let i = 0; i < obj.length; i += 2) {
+    o.push([obj[i], obj[i + 1]])
+  }
+
+  fs.writeFileSync('temp' + process.argv[2], JSON.stringify(o))
+  console.log(`file saved as temp${jso}`)
+}
+
+dothething2(process.argv[2])
