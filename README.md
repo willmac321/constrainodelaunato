@@ -60,19 +60,20 @@ ConstrainoDelaunato
 **Kind**: global class  
 
 * [ConstrainoDelaunato](#ConstrainoDelaunato)
-    * [new ConstrainoDelaunato(coords, k)](#new_ConstrainoDelaunato_new)
+    * [new ConstrainoDelaunato(coords, k, dist)](#new_ConstrainoDelaunato_new)
     * [.coords2D](#ConstrainoDelaunato+coords2D) ⇒ <code>Array</code>
     * [.coords](#ConstrainoDelaunato+coords) ⇒ <code>Array</code>
     * [.triangles](#ConstrainoDelaunato+triangles) ⇒ <code>Array</code>
     * [.hull](#ConstrainoDelaunato+hull) ⇒ <code>Array</code>
+    * [.delaunator](#ConstrainoDelaunato+delaunator) ⇒ <code>Object</code>
+    * [.boundaries](#ConstrainoDelaunato+boundaries) ⇒ <code>Array</code>
+    * [.holes](#ConstrainoDelaunato+holes) ⇒ <code>Array</code>
     * [.setTrianglesInsideBound(boundary)](#ConstrainoDelaunato+setTrianglesInsideBound)
     * [.update(point)](#ConstrainoDelaunato+update)
 
 <a name="new_ConstrainoDelaunato_new"></a>
 
-### new ConstrainoDelaunato(coords, k)
-constructor
-
+### new ConstrainoDelaunato(coords, k, dist)
 creates a delaunator object for the larger coord point cloud, and any smalle concave boundaries and delaunator objects for holes/boundaries supplied
 
 
@@ -80,6 +81,7 @@ creates a delaunator object for the larger coord point cloud, and any smalle con
 | --- | --- | --- |
 | coords | <code>Array</code> | Coordinate cloud, can be 2D or 1D, prefer 1D of type [x0, y0, x1, y1, ... xN, yN] |
 | k | <code>Integer</code> | lower bound for point selection in k grouping - minimum possible value is 3 - you have to make a polygon |
+| dist | <code>Integer</code> | distance for adding points along boundary, distance between line segment perpindicular to either point of triangle segment |
 | ...boundaries | <code>Array</code> | Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects |
 
 <a name="ConstrainoDelaunato+coords2D"></a>
@@ -110,6 +112,27 @@ hull
 
 **Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
 **Returns**: <code>Array</code> - Array of hull indices  
+<a name="ConstrainoDelaunato+delaunator"></a>
+
+### constrainoDelaunato.delaunator ⇒ <code>Object</code>
+delaunator
+
+**Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
+**Returns**: <code>Object</code> - Return delaunator object for parent points  
+<a name="ConstrainoDelaunato+boundaries"></a>
+
+### constrainoDelaunato.boundaries ⇒ <code>Array</code>
+boundaries
+
+**Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
+**Returns**: <code>Array</code> - concave boundary index array of parent points and hole points includes parent points as final array item  
+<a name="ConstrainoDelaunato+holes"></a>
+
+### constrainoDelaunato.holes ⇒ <code>Array</code>
+holes
+
+**Kind**: instance property of [<code>ConstrainoDelaunato</code>](#ConstrainoDelaunato)  
+**Returns**: <code>Array</code> - Delaunator object array for all hole/boundary points supplied, includes parent points as final array item  
 <a name="ConstrainoDelaunato+setTrianglesInsideBound"></a>
 
 ### constrainoDelaunato.setTrianglesInsideBound(boundary)
@@ -133,7 +156,6 @@ update
 | Param | Type | Description |
 | --- | --- | --- |
 | point | <code>Array</code> | x and y coord of point to add the delaunator object |
-
 
 
 #### Everything below is done automatically - but just in case...
