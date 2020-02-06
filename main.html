@@ -177,7 +177,7 @@ function draw() {
     }
     ctx.fill();
 
-	const b = delaunay.boundary;
+	const b = delaunay.boundaries[delaunay.boundaries.length - 1];
     ctx.fillStyle = 'cyan';
     ctx.beginPath();
     ctx.rect(padding + ratio * (b.minX.x - minX) - 3, padding + ratio * (b.minX.y - minY) - 3, 10, 10);
@@ -241,20 +241,20 @@ function draw() {
 //	ctx.stroke();
 //
             ctx.beginPath();
-            for (var i = 0; i < delaunay.boundary.cPoints.length; i++) {
+            for (var i = 0; i < delaunay.boundaries[delaunay.boundaries.length - 1].cPoints.length; i++) {
                 let op = {
-                    x: delaunay.coords[delaunay.boundary.cPoints[i]], 
-                    y: delaunay.coords[delaunay.boundary.cPoints[i] + 1]
+                    x: delaunay.coords[delaunay.boundaries[delaunay.boundaries.length - 1].cPoints[i]], 
+                    y: delaunay.coords[delaunay.boundaries[delaunay.boundaries.length - 1].cPoints[i] + 1]
                 };
                 ctx.fillStyle = 'magenta';
                 ctx.rect(padding + ratio * (op.x - minX) - 3, padding + ratio * (op.y - minY) - 3, 10, 10);
                 ctx.fill();
             }
 
-    triangles = delaunay.boundedDelaunator.triangles;
+    triangles = delaunay.holes[delaunay.holes.length - 1].triangles;
     var oldUpdateArr = updateArr.slice()
     const c2D = [];
-    const c1D = delaunay.boundedDelaunator.coords;
+    const c1D = delaunay.holes[delaunay.holes.length - 1].coords;
     for (let i = 0; i < c1D.length; i += 2) {
       c2D.push([c1D[i], c1D[i + 1]])
     }

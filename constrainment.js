@@ -29,23 +29,21 @@ export default class ConstrainoDelaunato {
       return
     }
 
-    this.delaunator = new Delaunator(coords)
-    this.boundaries = []
+    this._delaunator = new Delaunator(coords)
+    this._boundaries = []
     this.boundedDelaunators = []
 
     for (let boundary of boundaries) {
       if (boundary && Array.isArray(boundary[0]) && boundary[0].length === 2) {
         boundary = boundary.flat()
       }
-      this.boundaries.push(new BoundaryExtra(boundary, k))
-      this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
-      this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
+      this._boundaries.push(new BoundaryExtra(boundary, k))
+      this._boundaries[this._boundaries.length - 1].addPoints(coords, this._delaunator, dist)
+      this.boundedDelaunators.push(this.setTrianglesInsideBound(this._boundaries[this._boundaries.length - 1]))
     }
-    this.boundaries.push(new BoundaryExtra(coords, k))
-    this.boundaries[this.boundaries.length - 1].addPoints(coords, this.delaunator, dist)
-    this.boundedDelaunators.push(this.setTrianglesInsideBound(this.boundaries[this.boundaries.length - 1]))
-    this.boundary = this.boundaries[this.boundaries.length - 1]
-    this.boundedDelaunator = this.boundedDelaunators[this.boundedDelaunators.length - 1]
+    this._boundaries.push(new BoundaryExtra(coords, k))
+    this._boundaries[this._boundaries.length - 1].addPoints(coords, this._delaunator, dist)
+    this.boundedDelaunators.push(this.setTrianglesInsideBound(this._boundaries[this._boundaries.length - 1]))
   }
 
   /**
@@ -102,7 +100,7 @@ export default class ConstrainoDelaunato {
     for (const p of point.flat()) {
       c.push(p)
     }
-    this.delaunator = new Delaunator(c)
+    this._delaunator = new Delaunator(c)
   }
 
   /**
@@ -144,5 +142,32 @@ export default class ConstrainoDelaunato {
    */
   get hull () {
     return this.delaunator.hull
+  }
+
+  /**
+   * delaunator
+   *
+   * @returns {Object} Return delaunator object for parent points
+   */
+  get delaunator () {
+    return this._delaunator
+  }
+
+  /**
+   * boundaries
+   *
+   * @returns {Array} concave boundary index array of parent points and hole points includes parent points as final array item
+   */
+  get boundaries () {
+    return this._boundaries
+  }
+
+  /**
+   * holes
+   *
+   * @returns {Array} Delaunator object array for all hole/boundary points supplied, includes parent points as final array item
+   */
+  get holes () {
+    return this.boundedDelaunators
   }
 }
