@@ -6,6 +6,7 @@ node_modules/
 *.swo
 *.swp
 .vimrc*
+.vim*
 package-lock.json
 main.html
 convertJsontoInt.js

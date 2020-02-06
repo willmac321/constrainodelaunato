@@ -865,7 +865,7 @@
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
-        const stopVal = Infinity; // 88 // 86 // Infinity // 76 // Infinity // and beyond
+        const stopVal = Infinity; // 200 // 86 // Infinity // 76 // Infinity // and beyond
         const oldIndex = index.slice();
         // console.log('new k', k)
         if (index.length < 3) {
@@ -894,7 +894,6 @@
         index.splice(firstPoint.i, 1);
         while ((currentPoint !== firstPoint.coord || step === 1) && (index.length > 0)) {
           counter++;
-
           if (step === 4) {
             index.push(firstPoint.coord);
           }
@@ -1002,11 +1001,6 @@
           const newSlope = slope(lastPoint, newPoint);
           const newDist = euclid(currentPointArr, newPoint);
 
-          // if (Math.floor(currentPointArr[0]) === 196718 && Math.floor(currentPointArr[1]) === 751526) {
-          //   console.log(rv.slice(), lastSlope, lastDist, newSlope, newDist, lastDist, (Math.abs(newSlope) === Math.abs(lastSlope)))
-          //   console.log((!isNaN(lastSlope) && !isNaN(lastDist) && (Math.abs(newSlope) === Math.abs(lastSlope) || (newSlope === Infinity && lastSlope === -Infinity)) && newDist < lastDist))
-          // }
-
           if (!isNaN(lastSlope) && !isNaN(lastDist) && (Math.abs(newSlope) === Math.abs(lastSlope) || (newSlope === Infinity && lastSlope === -Infinity)) && newDist < lastDist) {
             // flipflop the two points in array order if the slopes are the same
             // sort by euclid instead of straight swap
@@ -1038,6 +1032,7 @@
           if (newDist === lastDist) {
             rv.push(index[i]);
           } else if (c === 0 || newSlope !== lastSlope) {
+          // } else if ( !lastSlope || newSlope !== lastSlope) {
             rv.push(index[i]);
             c++;
           }
@@ -1113,6 +1108,7 @@
 
       pointInOrOut (point, index, dir) {
         // assume ray going to + infinity on x plane here just making assumption that it extends 1000 units past whatever the minimum x value is in the boundary
+        console.log('wee');
         const p = {
           x0: point[0], y0: point[1], x1: dir, y1: point[1]
         };
@@ -1130,7 +1126,13 @@
           };
           const inters = intersect(p, l, true);
           if (isFinite(inters.x)) {
-            const testCond = Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y;
+            // TODO this fails on vertex sometimes
+            const testCond = false; // Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y
+            // TODO
+            if (p.x0 === 76 && p.y0 === 36) {
+              this.cPoints.push(index[i]);
+              console.log(testCond, inters, p, l, windingNum);
+            }
             if (l.y1 - l.y0 > 0 && !testCond) {
               windingNum++;
             } else if (l.y1 - l.y0 < 0 && !testCond) {
@@ -1139,6 +1141,8 @@
             last = { x: Math.round(inters.x * 1000000), y: Math.round(inters.y * 1000000) };
           }
         }
+        // TODO
+        if (p.x0 === 76 && p.y0 === 36) { console.log(windingNum, p); }
         return Math.abs(windingNum) !== 0
       }
 
@@ -1181,8 +1185,7 @@
     class BoundaryExtra extends Boundary {
       constructor (arr, k = 3) {
         super(arr, k);
-        //TODO
-        // this.cPoints = []
+    //    this.cPoints = []
         this.origCoordsLen = arr.length;
         this.intersectingLineSegs = [];
       }

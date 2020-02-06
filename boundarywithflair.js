@@ -4,8 +4,7 @@ import { distLineAndPoint, getEdges, intersect, sortHeap } from './helpers'
 export default class BoundaryExtra extends Boundary {
   constructor (arr, k = 3) {
     super(arr, k)
-    //TODO
-    // this.cPoints = []
+//    this.cPoints = []
     this.origCoordsLen = arr.length
     this.intersectingLineSegs = []
   }
