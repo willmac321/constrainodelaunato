@@ -2,6 +2,16 @@ var c
 
 // Unused functions
 /* eslint-disable */
+// the Land of Misfit Toys
+function computeSlopeProduct (m1, m2) {
+  if (Math.abs(m1) === 0 && (m2 === undefined || Math.abs(m2) === Infinity)) {
+    return -1
+  } else if (Math.abs(m2) === 0 && (m1 === undefined || Math.abs(m1) === Infinity)) {
+    return -1
+  }
+  return m1 * m2
+}
+
 function builtInSort (point, arr) {
   return arr.sort((a, b) => {
     // return manhattenDist(point, a) - manhattenDist(point, b)

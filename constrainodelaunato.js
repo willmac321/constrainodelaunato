@@ -886,8 +886,6 @@
         // alt index is sorted to minX value
         const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y]);
         const hull = this.concave(index, k);
-        // hull = this.sortHeapAndClean(this.coords, hull, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
-        // hull.push(hull[0])
         return hull
       }
 
@@ -896,18 +894,15 @@
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
-        const stopVal = Infinity; // 200 // 86 // Infinity // 76 // Infinity // and beyond
+        const stopVal = 45; // Infinity // 200 // 86 // Infinity // 76 // Infinity // and beyond
         const oldIndex = index.slice();
-        // console.log('new k', k)
         if (index.length < 3) {
-          console.log('len less than 3');
+          console.error(`Remaining points can not form a polygon k:${k}`);
           return null
         } else if (k > index.length - 1) {
-          console.log(counter);
-          console.log('k is too big');
+          console.error(`K exceeds total length of points available k:${k}`);
           return null
         } else if (index.length === 3) {
-          console.log('len 3');
           return index
         }
 
@@ -931,6 +926,7 @@
           // find nearest neighbors
           const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
           // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
+          // TODO give favor to closer points when most points are isoscoles triangles
           const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
           // if (cPoints.indexOf(firstPoint.coord) > -1) {
           //   console.log(cPoints)
@@ -1062,10 +1058,16 @@
         while (c < kk) {
           const newSlope = slope(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]]);
           const newDist = euclid(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]]);
+          //console.log(lastSlope, currentSlope, newSlope, computeSlopeProduct(newSlope, currentSlope))
 
           if (newDist === lastDist) {
             rv.push(index[i]);
-          } else if (c === 0 || newSlope !== lastSlope) {
+          } else if (newSlope === lastSlope) {
+            const temp = rv[rv.length - 1];
+            rv[rv.length - 1] = index[i];
+            rv.push(temp);
+            c++;
+          } else if (c === 0 || (newSlope !== lastSlope)) {
           // } else if ( !lastSlope || newSlope !== lastSlope) {
             rv.push(index[i]);
             c++;
