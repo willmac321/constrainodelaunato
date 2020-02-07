@@ -732,6 +732,33 @@
       a[i] = a[j];
       a[j] = t;
     }
+    function maximumPointY (newArr, index) {
+      let ind = 0;
+      let minY = -Infinity;
+      let minX = -Infinity;
+      if (index) {
+        for (const [k, p] of index.entries()) {
+          if (newArr[p + 1] > minY) {
+            minX = newArr[p];
+            minY = newArr[p + 1];
+            ind = k;
+          } else if (newArr[p + 1] >= minY && newArr[p] >= minX) {
+            minX = newArr[p];
+            minY = newArr[p + 1];
+            ind = k;
+          }
+        }
+      } else {
+        for (let p = 0; p < newArr.length; p++) {
+          if (newArr[p] > minX) {
+            minX = newArr[p];
+            ind = p;
+          }
+        }
+      }
+      // console.log({ x: minX, y: minY, i: ind })
+      return { x: minX, y: minY, i: ind }
+    }
 
     function maximumPointX (newArr, index) {
       let ind = 0;
@@ -750,7 +777,7 @@
           }
         }
       } else {
-        for (let p = 0; p > newArr.length; p++) {
+        for (let p = 0; p < newArr.length; p++) {
           if (newArr[p] > minX) {
             minX = newArr[p];
             ind = p;
@@ -836,8 +863,12 @@
         this.index = this.clean(this.index);
         this.center = this.calcCenter();
         this.minY = minimumPointY(this.coords, this.index);
+        this.maxY = maximumPointY(this.coords, this.index);
         this.minX = minimumPointX(this.coords, this.index);
         this.maxX = maximumPointX(this.coords, this.index);
+        this.maxD = Math.sqrt(Math.pow(this.maxX.x - this.minX.x, 2) + Math.pow(this.maxY.y - this.minY.y, 2));
+        this.maxR = this.maxR / 2;
+        this.offsetAngle = 1;
 
         this.cPoints = [];
 
@@ -962,7 +993,10 @@
         for (const i of index) {
           allInside = this.pointInOrOut(
             [this.coords[i], this.coords[i + 1]],
-            hull, this.maxX.x + 10);
+            hull, 0);
+          if (!allInside) {
+            break
+          }
         }
         if (!allInside) {
           return this.concave(oldIndex, ++kk)
@@ -1106,11 +1140,23 @@
         return p
       }
 
-      pointInOrOut (point, index, dir) {
+      /**
+       * pointInOrOut
+       *
+       * checks if a point is in or out of the polygon, if a vertex is encountered at an angle, will rotate the ray around the point until a weird intersection is not found -- weird here is the intersection of two linesegments of the boundary
+       *        - pretty much avoid address intersect boundary line segments by rotating the array
+       *
+       * @param {Array} point point to use as center point for ray to test for simple closed polygon
+       * @param {Array} index index array of the boundary points
+       * @param {Integer} angle Incremental angle to change the ray by if a weird vertex is encountered, will quit at 360 degree rotation, hopefully theres an angle there, if not will just return a value
+       * @returns {Boolean} True if the point is inside, false if the point is outside the polygon
+       */
+      pointInOrOut (point, index, angle) {
         // assume ray going to + infinity on x plane here just making assumption that it extends 1000 units past whatever the minimum x value is in the boundary
-        console.log('wee');
+        const x1 = point[0] + this.maxD * Math.cos(angle * Math.PI / 180);
+        const y1 = point[1] + this.maxD * Math.sin(angle * Math.PI / 180);
         const p = {
-          x0: point[0], y0: point[1], x1: dir, y1: point[1]
+          x0: point[0], y0: point[1], x1: x1, y1: y1
         };
         this.ray = p;
         // lets use non-zero winding number rule
@@ -1126,23 +1172,20 @@
           };
           const inters = intersect(p, l, true);
           if (isFinite(inters.x)) {
-            // TODO this fails on vertex sometimes
-            const testCond = false; // Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y
-            // TODO
-            if (p.x0 === 76 && p.y0 === 36) {
-              this.cPoints.push(index[i]);
-              console.log(testCond, inters, p, l, windingNum);
-            }
+            // fails on corner intersection sometimes, so if a corner is intersect, rotate the ray being tested by 1 deg and start over
+            const testCond = Math.round(inters.x * 1000000) === last.x && Math.round(inters.y * 1000000) === last.y;
             if (l.y1 - l.y0 > 0 && !testCond) {
               windingNum++;
             } else if (l.y1 - l.y0 < 0 && !testCond) {
               windingNum--;
+            } else if (testCond) {
+              if (angle < 360) {
+                return this.pointInOrOut(point, index, ++angle)
+              }
             }
             last = { x: Math.round(inters.x * 1000000), y: Math.round(inters.y * 1000000) };
           }
         }
-        // TODO
-        if (p.x0 === 76 && p.y0 === 36) { console.log(windingNum, p); }
         return Math.abs(windingNum) !== 0
       }
 

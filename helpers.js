@@ -265,6 +265,33 @@ export function swap (a, i, j) {
   a[i] = a[j]
   a[j] = t
 }
+export function maximumPointY (newArr, index) {
+  let ind = 0
+  let minY = -Infinity
+  let minX = -Infinity
+  if (index) {
+    for (const [k, p] of index.entries()) {
+      if (newArr[p + 1] > minY) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      } else if (newArr[p + 1] >= minY && newArr[p] >= minX) {
+        minX = newArr[p]
+        minY = newArr[p + 1]
+        ind = k
+      }
+    }
+  } else {
+    for (let p = 0; p < newArr.length; p++) {
+      if (newArr[p] > minX) {
+        minX = newArr[p]
+        ind = p
+      }
+    }
+  }
+  // console.log({ x: minX, y: minY, i: ind })
+  return { x: minX, y: minY, i: ind }
+}
 
 export function maximumPointX (newArr, index) {
   let ind = 0
@@ -283,7 +310,7 @@ export function maximumPointX (newArr, index) {
       }
     }
   } else {
-    for (let p = 0; p > newArr.length; p++) {
+    for (let p = 0; p < newArr.length; p++) {
       if (newArr[p] > minX) {
         minX = newArr[p]
         ind = p
