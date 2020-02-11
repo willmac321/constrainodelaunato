@@ -856,8 +856,9 @@
     var counter = 0;
 
     class Boundary {
-      constructor (arr, k = 3) {
+      constructor (arr, k = 3, dist) {
         this.k = k;
+        this.dist = dist;
         this.coords = arr.slice();
         this.index = [...this.coords.keys()].filter((i) => i % 2 === 0);
         this.index = this.clean(this.index);
@@ -894,7 +895,7 @@
         // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
         // double check arr is sorted and clean
         // also sort it so all points are in order from some min point  on the xy plane
-        const stopVal = 45; // Infinity // 200 // 86 // Infinity // 76 // Infinity // and beyond
+        const stopVal = Infinity; // 45 // Infinity // 200 // 86 // Infinity // 76 // Infinity // and beyond
         const oldIndex = index.slice();
         if (index.length < 3) {
           console.error(`Remaining points can not form a polygon k:${k}`);
@@ -1058,19 +1059,19 @@
         while (c < kk) {
           const newSlope = slope(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]]);
           const newDist = euclid(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]]);
-          //console.log(lastSlope, currentSlope, newSlope, computeSlopeProduct(newSlope, currentSlope))
-
-          if (newDist === lastDist) {
-            rv.push(index[i]);
-          } else if (newSlope === lastSlope) {
-            const temp = rv[rv.length - 1];
-            rv[rv.length - 1] = index[i];
-            rv.push(temp);
-            c++;
-          } else if (c === 0 || (newSlope !== lastSlope)) {
-          // } else if ( !lastSlope || newSlope !== lastSlope) {
-            rv.push(index[i]);
-            c++;
+          if (newDist <= this.dist) {
+            if (newDist === lastDist) {
+              rv.push(index[i]);
+            } else if (newSlope === lastSlope) {
+              const temp = rv[rv.length - 1];
+              rv[rv.length - 1] = index[i];
+              rv.push(temp);
+              c++;
+            } else if (c === 0 || (newSlope !== lastSlope)) {
+            // } else if ( !lastSlope || newSlope !== lastSlope) {
+              rv.push(index[i]);
+              c++;
+            }
           }
           i++;
           if (i > index.length - 1) {
@@ -1228,11 +1229,12 @@
     }
 
     class BoundaryExtra extends Boundary {
-      constructor (arr, k = 3) {
-        super(arr, k);
-    //    this.cPoints = []
+      constructor (arr, k = 3, maxDist = Infinity) {
+        super(arr, k, maxDist);
+        //    this.cPoints = []
         this.origCoordsLen = arr.length;
         this.intersectingLineSegs = [];
+        this.maxDist = maxDist;
       }
 
       /**
@@ -1323,10 +1325,11 @@
        *
        * @param {Array} coords Coordinate cloud, can be 2D or 1D, prefer 1D of type [x0, y0, x1, y1, ... xN, yN]
        * @param {Integer} k lower bound for point selection in k grouping - minimum possible value is 3 - you have to make a polygon
-       * @param {Integer} dist - distance for adding points along boundary, distance between line segment perpindicular to either point of triangle segment
+       * @param {Integer} dist - distance for adding points along boundary, distance between line segment perpindicular to either point of triangle segment; used for point interpolation along a boundary
+       * @param {Integer} distSelectionLimit - distance to limit selection of candidate points for concave boundary creation - useful if there is a whole on edge of points that is not being acknowledged by algorithm due to uniform point spacing or something like that; used during concave boundary creation
        * @param {Array} ...boundaries Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects
        */
-      constructor (coords, k, dist, ...boundaries) {
+      constructor (coords, k, dist, distSelectionLimit, ...boundaries) {
         // k is the k-nearest neighbor selection
         // if coords are 2D
         if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
@@ -1347,7 +1350,7 @@
           this._boundaries[this._boundaries.length - 1].addPoints(coords, this._delaunator, dist);
           this.boundedDelaunators.push(this.setTrianglesInsideBound(this._boundaries[this._boundaries.length - 1]));
         }
-        this._boundaries.push(new BoundaryExtra(coords, k));
+        this._boundaries.push(new BoundaryExtra(coords, k, distSelectionLimit));
         this._boundaries[this._boundaries.length - 1].addPoints(coords, this._delaunator, dist);
         this.boundedDelaunators.push(this.setTrianglesInsideBound(this._boundaries[this._boundaries.length - 1]));
       }

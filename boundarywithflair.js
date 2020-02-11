@@ -2,11 +2,12 @@ import Boundary from './boundary'
 import { distLineAndPoint, getEdges, intersect, sortHeap } from './helpers'
 
 export default class BoundaryExtra extends Boundary {
-  constructor (arr, k = 3) {
-    super(arr, k)
-//    this.cPoints = []
+  constructor (arr, k = 3, maxDist = Infinity) {
+    super(arr, k, maxDist)
+    //    this.cPoints = []
     this.origCoordsLen = arr.length
     this.intersectingLineSegs = []
+    this.maxDist = maxDist
   }
 
   /**

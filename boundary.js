@@ -3,8 +3,9 @@ import { euclid, intersect, maximumPointX, maximumPointY, minimumPointY, minimum
 var counter = 0
 
 export default class Boundary {
-  constructor (arr, k = 3) {
+  constructor (arr, k = 3, dist) {
     this.k = k
+    this.dist = dist
     this.coords = arr.slice()
     this.index = [...this.coords.keys()].filter((i) => i % 2 === 0)
     this.index = this.clean(this.index)
@@ -41,7 +42,7 @@ export default class Boundary {
     // https://pdfs.semanticscholar.org/2397/17005c3ebd5d6a42fc833daf97a0edee1ce4.pdf
     // double check arr is sorted and clean
     // also sort it so all points are in order from some min point  on the xy plane
-    const stopVal = 45 // Infinity // 200 // 86 // Infinity // 76 // Infinity // and beyond
+    const stopVal = Infinity // 45 // Infinity // 200 // 86 // Infinity // 76 // Infinity // and beyond
     const oldIndex = index.slice()
     if (index.length < 3) {
       console.error(`Remaining points can not form a polygon k:${k}`)
@@ -199,29 +200,25 @@ export default class Boundary {
     const rv = []
     let lastSlope
     let lastDist
-    let currentSlope
     kk = Math.min(kk, index.length - 1)
     let i = 0
     let c = 0
     while (c < kk) {
       const newSlope = slope(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]])
       const newDist = euclid(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]])
-      if (c === 0) {
-        currentSlope = newSlope
-      }
-      //console.log(lastSlope, currentSlope, newSlope, computeSlopeProduct(newSlope, currentSlope))
-
-      if (newDist === lastDist) {
-        rv.push(index[i])
-      } else if (newSlope === lastSlope) {
-        const temp = rv[rv.length - 1]
-        rv[rv.length - 1] = index[i]
-        rv.push(temp)
-        c++
-      } else if (c === 0 || (newSlope !== lastSlope)) {
-      // } else if ( !lastSlope || newSlope !== lastSlope) {
-        rv.push(index[i])
-        c++
+      if (newDist <= this.dist) {
+        if (newDist === lastDist) {
+          rv.push(index[i])
+        } else if (newSlope === lastSlope) {
+          const temp = rv[rv.length - 1]
+          rv[rv.length - 1] = index[i]
+          rv.push(temp)
+          c++
+        } else if (c === 0 || (newSlope !== lastSlope)) {
+        // } else if ( !lastSlope || newSlope !== lastSlope) {
+          rv.push(index[i])
+          c++
+        }
       }
       i++
       if (i > index.length - 1) {

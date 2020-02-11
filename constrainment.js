@@ -10,17 +10,16 @@ import { maximumPointX } from './helpers'
  */
 export default class ConstrainoDelaunato {
   /**
-   * constructor
-   *
    * creates a delaunator object for the larger coord point cloud, and any smalle concave boundaries and delaunator objects for holes/boundaries supplied
    * @constructor
    *
    * @param {Array} coords Coordinate cloud, can be 2D or 1D, prefer 1D of type [x0, y0, x1, y1, ... xN, yN]
    * @param {Integer} k lower bound for point selection in k grouping - minimum possible value is 3 - you have to make a polygon
-   * @param {Integer} dist - distance for adding points along boundary, distance between line segment perpindicular to either point of triangle segment
+   * @param {Integer} dist - distance for adding points along boundary, distance between line segment perpindicular to either point of triangle segment; used for point interpolation along a boundary
+   * @param {Integer} distSelectionLimit - distance to limit selection of candidate points for concave boundary creation - useful if there is a whole on edge of points that is not being acknowledged by algorithm due to uniform point spacing or something like that; used during concave boundary creation
    * @param {Array} ...boundaries Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects
    */
-  constructor (coords, k, dist, ...boundaries) {
+  constructor (coords, k, dist, distSelectionLimit ...boundaries) {
     // k is the k-nearest neighbor selection
     // if coords are 2D
     if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
@@ -41,7 +40,7 @@ export default class ConstrainoDelaunato {
       this._boundaries[this._boundaries.length - 1].addPoints(coords, this._delaunator, dist)
       this.boundedDelaunators.push(this.setTrianglesInsideBound(this._boundaries[this._boundaries.length - 1]))
     }
-    this._boundaries.push(new BoundaryExtra(coords, k))
+    this._boundaries.push(new BoundaryExtra(coords, k, distSelectionLimit))
     this._boundaries[this._boundaries.length - 1].addPoints(coords, this._delaunator, dist)
     this.boundedDelaunators.push(this.setTrianglesInsideBound(this._boundaries[this._boundaries.length - 1]))
   }
