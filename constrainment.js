@@ -19,7 +19,7 @@ export default class ConstrainoDelaunato {
    * @param {Integer} distSelectionLimit - distance to limit selection of candidate points for concave boundary creation - useful if there is a whole on edge of points that is not being acknowledged by algorithm due to uniform point spacing or something like that; used during concave boundary creation
    * @param {Array} ...boundaries Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects
    */
-  constructor (coords, k, dist, distSelectionLimit ...boundaries) {
+  constructor (coords, k, dist, distSelectionLimit, ...boundaries) {
     // k is the k-nearest neighbor selection
     // if coords are 2D
     if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
