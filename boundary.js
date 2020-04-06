@@ -15,7 +15,6 @@ export default class Boundary {
     this.minX = minimumPointX(this.coords, this.index)
     this.maxX = maximumPointX(this.coords, this.index)
     this.maxD = Math.sqrt(Math.pow(this.maxX.x - this.minX.x, 2) + Math.pow(this.maxY.y - this.minY.y, 2))
-    this.maxR = this.maxR / 2
     this.offsetAngle = 1
 
     this.cPoints = []
@@ -74,7 +73,6 @@ export default class Boundary {
       // find nearest neighbors
       const kNearestPoints = this.nearestPoints(index, currentPoint, kk)
       // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
-      // TODO give favor to closer points when most points are isoscoles triangles
       const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2])
       // if (cPoints.indexOf(firstPoint.coord) > -1) {
       //   console.log(cPoints)
@@ -239,7 +237,6 @@ export default class Boundary {
   clean (index) {
     // there has to be a better way to do this
     // On^2  urrrgh
-    const itRem = index.length
 
     let count = 0
     const duplicates = []

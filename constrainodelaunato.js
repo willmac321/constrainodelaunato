@@ -868,7 +868,6 @@
         this.minX = minimumPointX(this.coords, this.index);
         this.maxX = maximumPointX(this.coords, this.index);
         this.maxD = Math.sqrt(Math.pow(this.maxX.x - this.minX.x, 2) + Math.pow(this.maxY.y - this.minY.y, 2));
-        this.maxR = this.maxR / 2;
         this.offsetAngle = 1;
 
         this.cPoints = [];
@@ -927,7 +926,6 @@
           // find nearest neighbors
           const kNearestPoints = this.nearestPoints(index, currentPoint, kk);
           // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
-          // TODO give favor to closer points when most points are isoscoles triangles
           const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2]);
           // if (cPoints.indexOf(firstPoint.coord) > -1) {
           //   console.log(cPoints)
@@ -1092,7 +1090,6 @@
       clean (index) {
         // there has to be a better way to do this
         // On^2  urrrgh
-        const itRem = index.length;
 
         let count = 0;
         const duplicates = [];
@@ -1318,8 +1315,6 @@
      */
     class ConstrainoDelaunato {
       /**
-       * constructor
-       *
        * creates a delaunator object for the larger coord point cloud, and any smalle concave boundaries and delaunator objects for holes/boundaries supplied
        * @constructor
        *
@@ -1329,7 +1324,7 @@
        * @param {Integer} distSelectionLimit - distance to limit selection of candidate points for concave boundary creation - useful if there is a whole on edge of points that is not being acknowledged by algorithm due to uniform point spacing or something like that; used during concave boundary creation
        * @param {Array} ...boundaries Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects
        */
-      constructor (coords, k, dist, distSelectionLimit, ...boundaries) {
+      constructor (coords, k, ...boundaries) {
         // k is the k-nearest neighbor selection
         // if coords are 2D
         if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
@@ -1339,6 +1334,23 @@
         }
 
         this._delaunator = new Delaunator(coords);
+        const edges = getEdges(this._delaunator);
+        let count = 0;
+        let sum = 0;
+        for (let i = 0; i < edges.length; i += 2) {
+          if (i === edges.length - 1) {
+            // console.log({ x: coords[edges[i]], y: coords[edges[i] + 1] }, { x: coords[edges[0]], y: coords[edges[0] + 1] })
+            sum += euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[0]], coords[edges[0] + 1]]);
+            // console.log(euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[0]], coords[edges[0] + 1]]))
+          } else {
+            // console.log({ x: coords[edges[i]], y: coords[edges[i] + 1] }, { x: coords[edges[i + 1]], y: coords[edges[i + 1] + 1] })
+            sum += euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[i + 1]], coords[edges[i + 1] + 1]]);
+            // console.log(euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[i + 1]], coords[edges[i + 1] + 1]]))
+          }
+          count += 1;
+        }
+        const distSelectionLimit = Math.ceil(sum / count);
+        const dist = distSelectionLimit * 2;
         this._boundaries = [];
         this.boundedDelaunators = [];
 

@@ -37,7 +37,7 @@
     "build": "rollup -c",
     "start": "browser-sync start --server --files './*.js' './mainBound.html' --index \"mainBound.html\" & rollup -cw",
     "prepublishOnly": "npm test && npm run build",
-    "dev": "browser-sync start --server --files './*.js' './mainBound.html' --index \"mainBound.html\" & rollup -cw"
+    "dev": "browser-sync start --server --files './*.js' './main.html' --index \"main.html\" & rollup -cw"
   },
   "files": [
     "constrainodelaunato.js",
