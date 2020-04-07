@@ -15,16 +15,16 @@
     "@rollup/plugin-node-resolve": "^7.1.1",
     "browser-sync": "^2.26.7",
     "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1",
-    "eslint-plugin-node": "^11.0.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "rollup": "^1.31.0",
+    "jsdoc-to-markdown": "^5.0.3",
+    "rollup": "^1.32.1",
     "rollup-plugin-buble": "^0.19.8",
-    "rollup-plugin-terser": "^5.2.0",
-    "jsdoc-to-markdown": "^5.0.3"
+    "rollup-plugin-terser": "^5.3.0"
   },
   "repository": {
     "type": "git",
