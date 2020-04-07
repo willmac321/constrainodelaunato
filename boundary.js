@@ -85,9 +85,9 @@ export default class Boundary {
       const kNearestPoints = this.nearestPoints(index, currentPoint, kk)
       // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
       const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2])
-      if (cPoints.indexOf(firstPoint.coord) > -1) {
-        console.log(cPoints)
-      }
+      // if (cPoints.indexOf(firstPoint.coord) > -1) {
+      //   console.log(cPoints)
+      // }
       let its = true
       let i = -1
       while (its && i < cPoints.length - 1) {
