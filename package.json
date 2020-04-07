@@ -35,7 +35,7 @@
     "pretest": "npm run lint",
     "test": "",
     "build": "rollup -c",
-    "start": "browser-sync start --server --files './*.js' './mainBound.html' --index \"mainBound.html\" & rollup -cw",
+    "start": "browser-sync start --port=8081 --ui-port=8082 --server --files './*.js' './mainBound.html' --index \"mainBound.html\" & rollup -cw",
     "prepublishOnly": "npm test && npm run build",
     "dev": "browser-sync start --server --files './*.js' './main.html' --index \"main.html\" & rollup -cw"
   },

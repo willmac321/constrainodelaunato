@@ -32,7 +32,14 @@ export default class Boundary {
   findConcaveHull (k) {
     // alt index is sorted to minX value
     const index = this.sortHeapAndClean(this.coords, this.index, 'polar', [this.minX.x, this.minY.y], [this.center.x, this.center.y])
-    const hull = this.concave(index, k)
+    const indexCopy = [...index]
+    let hull = this.concave(index, k)
+    if (hull === null) {
+      // try enlarging distance to find match
+      this.dist = Infinity
+      hull = this.concave(indexCopy, k)
+    }
+
     return hull
   }
 
@@ -67,16 +74,20 @@ export default class Boundary {
     index.splice(firstPoint.i, 1)
     while ((currentPoint !== firstPoint.coord || step === 1) && (index.length > 0)) {
       counter++
-      if (step === 4) {
+      if (step === 4 && index.indexOf(firstPoint.coord) < 0) {
+        index.push(firstPoint.coord)
+      } else if (step <= oldIndex.length - 1 && step < 4 && (index.length === 1) && index.indexOf(firstPoint.coord) < 0) {
+        // TODO remove indexOf if not needed
+        // if the poly is 3 or 4 points add the index to the end so we dont short circuit
         index.push(firstPoint.coord)
       }
       // find nearest neighbors
       const kNearestPoints = this.nearestPoints(index, currentPoint, kk)
       // descending order 'right-hand' turn x and y min are top left on js canvas in webpage
       const cPoints = this.sortByAngle(kNearestPoints, currentPoint, hull[hull.length - 2])
-      // if (cPoints.indexOf(firstPoint.coord) > -1) {
-      //   console.log(cPoints)
-      // }
+      if (cPoints.indexOf(firstPoint.coord) > -1) {
+        console.log(cPoints)
+      }
       let its = true
       let i = -1
       while (its && i < cPoints.length - 1) {
@@ -122,15 +133,19 @@ export default class Boundary {
       if (its) {
         return this.concave(oldIndex, ++kk)
       }
+
       currentPoint = cPoints[i]
       hull.push(currentPoint)
 
       if (counter > stopVal) {
         return hull // .concat(cPoints)
       }
+
       index.splice(index.indexOf(currentPoint), 1)
+
       step++
     }
+
     let allInside = true
     for (const i of index) {
       allInside = this.pointInOrOut(
@@ -201,6 +216,9 @@ export default class Boundary {
     kk = Math.min(kk, index.length - 1)
     let i = 0
     let c = 0
+    if (index.length === 1) {
+      return index
+    }
     while (c < kk) {
       const newSlope = slope(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]])
       const newDist = euclid(currentPoint, [this.coords[index[i]], this.coords[index[i] + 1]])
@@ -225,6 +243,7 @@ export default class Boundary {
       lastSlope = newSlope
       lastDist = newDist
     }
+
     return rv
   }
 

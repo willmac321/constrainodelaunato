@@ -18,7 +18,6 @@ export default class BoundaryExtra extends Boundary {
    * @param {Integer} dist Max distance to point to trigger interpolation, only one of two points in line segment has to meet this criteria
    */
   addPoints (parentArr, delaunator, dist) {
-    // console.log(parentArr, delaunator)
     this.k = 3
     const edges = getEdges(delaunator)
     // get all intersecting lines to the hull line seg
