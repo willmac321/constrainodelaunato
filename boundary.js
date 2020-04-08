@@ -77,7 +77,6 @@ export default class Boundary {
       if (step === 4 && index.indexOf(firstPoint.coord) < 0) {
         index.push(firstPoint.coord)
       } else if (step <= oldIndex.length - 1 && step < 4 && (index.length === 1) && index.indexOf(firstPoint.coord) < 0) {
-        // TODO remove indexOf if not needed
         // if the poly is 3 or 4 points add the index to the end so we dont short circuit
         index.push(firstPoint.coord)
       }

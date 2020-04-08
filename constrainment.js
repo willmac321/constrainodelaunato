@@ -19,7 +19,7 @@ export default class ConstrainoDelaunato {
    * @param {Integer} distSelectionLimit - distance to limit selection of candidate points for concave boundary creation - useful if there is a whole on edge of points that is not being acknowledged by algorithm due to uniform point spacing or something like that; used during concave boundary creation
    * @param {Array} ...boundaries Point clouds of holes in coords, stored in array boundary for concave boundaries and boundedDelaunator for created delaunator objects
    */
-  constructor (coords, k, ...boundaries) {
+  constructor (coords, k, calcDist, ...boundaries) {
     // k is the k-nearest neighbor selection
     // if coords are 2D
     if (coords && Array.isArray(coords[0]) && coords[0].length === 2) {
@@ -30,22 +30,24 @@ export default class ConstrainoDelaunato {
 
     this._delaunator = new Delaunator(coords)
     const edges = getEdges(this._delaunator)
+    // calculate a average dist as the max selection distance
     let count = 0
     let sum = 0
     for (let i = 0; i < edges.length; i += 2) {
       if (i === edges.length - 1) {
-        // console.log({ x: coords[edges[i]], y: coords[edges[i] + 1] }, { x: coords[edges[0]], y: coords[edges[0] + 1] })
         sum += euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[0]], coords[edges[0] + 1]])
-        // console.log(euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[0]], coords[edges[0] + 1]]))
       } else {
-        // console.log({ x: coords[edges[i]], y: coords[edges[i] + 1] }, { x: coords[edges[i + 1]], y: coords[edges[i + 1] + 1] })
         sum += euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[i + 1]], coords[edges[i + 1] + 1]])
-        // console.log(euclid([coords[edges[i]], coords[edges[i] + 1]], [coords[edges[i + 1]], coords[edges[i + 1] + 1]]))
       }
       count += 1
     }
-    const distSelectionLimit = Math.ceil(sum / count)
-    const dist = distSelectionLimit * 2
+
+    let distSelectionLimit = Infinity
+    if (calcDist) {
+      distSelectionLimit = Math.ceil(sum / count)
+    }
+
+    const dist = Math.ceil(sum / count) * 2
     this._boundaries = []
     this.boundedDelaunators = []
 
@@ -77,13 +79,16 @@ export default class ConstrainoDelaunato {
     let i = 0
     for (const e of index) {
       const point = { x: this.delaunator.coords[e], y: this.delaunator.coords[e + 1] }
-      if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
-        outIndex.push(i)
         coords.push(point.x, point.y)
         i += 2
-      }
+      // if (boundary.pointInOrOut([point.x, point.y], boundary.hull, maxX.x + 10)) {
+      //   outIndex.push(i)
+      //   coords.push(point.x, point.y)
+      //   i += 2
+      // }
     }
 
+    console.log(coords.length, index, coords)
     coords = coords.concat(boundary.subset(boundary.hull))
     const rv = new Delaunator(coords)
     const t = []
