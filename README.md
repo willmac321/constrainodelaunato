@@ -1,6 +1,6 @@
 # Constraino Delaunato
 ### your a wizard harry
-<img src="https://gitlab.com/illmac321/constrainodelaunato/-/raw/master/static/wizard.jpg" alt="Tada" width="300"/>
+<img src="https://github.com/illmac321/constrainodelaunato/-/raw/master/static/wizard.jpg" alt="Tada" width="300"/>
 
 ## About
 
